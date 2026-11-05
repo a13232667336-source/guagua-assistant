@@ -1,4 +1,4 @@
-name: build-guagua
+﻿name: build-guagua
 
 # 呱呱助手：在 GitHub 的 macOS 机器上编出
 #   Guagua.dylib            —— TrollFools 注入器直接选
@@ -65,7 +65,7 @@ jobs:
             git clone --depth 1 https://github.com/arthenica/ffmpeg-kit-next \
               deps/ffmpeg-kit-next/upstream
           fi
-          ./deps/ffmpeg-kit-next/build-ffmpeg.sh
+          bash ./deps/ffmpeg-kit-next/build-ffmpeg.sh
 
       - name: 编 tweak
         run: |
