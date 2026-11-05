@@ -385,7 +385,7 @@ static UIControl* GuaguaBuildOurRow(CGFloat width, CGFloat height, UILabel* anch
           forControlEvents:UIControlEventTouchDown];
     [row addTarget:proxy
             action:@selector(handleTouchUp:)
-          forControlEvents:UIControlEventTouchInside | UIControlEventTouchUpOutside |
+          forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside |
                           UIControlEventTouchCancel];
     return row;
 }
