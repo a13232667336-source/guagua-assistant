@@ -1,11 +1,9 @@
-﻿name: build-guagua
+name: build-guagua
 
 # 呱呱助手：在 GitHub 的 macOS 机器上编出
 #   Guagua.dylib            —— TrollFools 注入器直接选
 #   Guagua-TrollFools.zip   —— dylib + Guagua.bundle（推荐）
 #   *.deb                   —— 越狱 / deb 注入
-#
-# 触发：push（含网页上传）、或 Actions 页面手动 Run workflow
 
 on:
   push:
@@ -30,7 +28,6 @@ jobs:
 
       - name: 装打包工具
         run: |
-          # 缺哪样都不会挡住 dylib 的编译，deb 打不出来而已
           brew install make || true
           brew install dpkg || true
           brew install ldid || true
@@ -54,20 +51,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src/deps/ffmpeg-kit-next/build
-          key: ffmpeg-${{ hashFiles('src/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}
+          key: ffmpeg-${{ hashFiles('src/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}-v2
 
       - name: 编 FFmpeg 静态库（首次约 20-30 分钟）
         if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
         run: |
           cd src
           if [ ! -f deps/ffmpeg-kit-next/upstream/apple/src/FFmpegKit.m ]; then
-            echo "补 ffmpeg-kit-next 源码（网页上传没有子模块）"
+            echo "补 ffmpeg-kit-next 源码（没有子模块）"
             git clone --depth 1 https://github.com/arthenica/ffmpeg-kit-next \
               deps/ffmpeg-kit-next/upstream
           fi
-          # 兜底：万一脚本被 Windows 检出成 CRLF，先转回 LF
-          perl -pi -e 's/$//' deps/ffmpeg-kit-next/build-ffmpeg.sh
-          bash ./deps/ffmpeg-kit-next/build-ffmpeg.sh
+          # 防止脚本被检出成 CRLF（会让 set -o pipefail 报 invalid option name）
+          sed -i '' -e 's/\r$//' deps/ffmpeg-kit-next/build-ffmpeg.sh
+          bash deps/ffmpeg-kit-next/build-ffmpeg.sh
 
       - name: 编 tweak
         run: |
