@@ -537,6 +537,62 @@ static BOOL GuaguaProcessPlayerSheet(UIView* root) {
     return YES;
 }
 
+#pragma mark - 诊断：面板结构复制到剪贴板
+
+// 只在「确实是播放器面板、但两种接管都失败」时触发一次：把面板的视图树和无障碍
+// 标签复制到剪贴板并弹提示，方便下一版照着真实结构改。
+static void NFBDumpView(UIView* view, NSInteger depth, NSMutableString* out) {
+    if (view == nil || depth > 14) {
+        return;
+    }
+    NSMutableString* indent = [NSMutableString string];
+    for (NSInteger i = 0; i < depth; i++) {
+        [indent appendString:@"  "];
+    }
+    NSString* extra = @"";
+    if ([view isKindOfClass:[UILabel class]]) {
+        extra = [NSString stringWithFormat:@" text=\"%@\"", NFBLabelText((UILabel*)view)];
+    }
+    [out appendFormat:@"%@%@ %@%@\n", indent, NSStringFromClass([view class]),
+                       NSStringFromCGRect(view.frame), extra];
+    for (UIView* subview in view.subviews) {
+        NFBDumpView(subview, depth + 1, out);
+    }
+}
+
+static void GuaguaDumpPlayerSheet(UIViewController* vc) {
+    static BOOL dumped = NO;
+    if (dumped) {
+        return;
+    }
+    dumped = YES;
+
+    NSMutableString* report = [NSMutableString string];
+    [report appendFormat:@"== Guagua player sheet diag ==\nVC: %@\n", NSStringFromClass([vc class])];
+    NFBDumpView(vc.view, 0, report);
+
+    [report appendString:@"\n-- accessibility --\n"];
+    NSMutableArray* elements = [NSMutableArray array];
+    NFBCollectAccessibilityElements(vc.view.window, elements, 0);
+    for (id element in elements) {
+        CGRect frame = CGRectZero;
+        NFBAccessibilityFrame(element, &frame);
+        [report appendFormat:@"%@ %@ label=%@\n", NSStringFromClass([element class]),
+                              NSStringFromCGRect(frame), NFBAccessibilityLabel(element) ?: @"(nil)"];
+    }
+
+    UIPasteboard.generalPasteboard.string = report;
+    NSLog(@"[Guagua] player sheet diag copied (%lu chars)", (unsigned long)report.length);
+
+    UIAlertController* alert = [UIAlertController
+        alertControllerWithTitle:@"呱呱助手"
+                         message:@"播放器面板结构已复制到剪贴板，请把它发给开发者以便适配。"
+                  preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"好"
+                                             style:UIAlertActionStyleDefault
+                                           handler:nil]];
+    [topMostController() presentViewController:alert animated:YES completion:nil];
+}
 #pragma mark - 扫描调度
 
 static const void* kGuaguaPlayerTimerKey = &kGuaguaPlayerTimerKey;
@@ -574,6 +630,10 @@ static void GuaguaWatchForPlayerSheet(UIViewController* vc) {
                                          if (++hits >= 6) {  // SwiftUI 重绘窗口过了就停
                                              [t invalidate];
                                          }
+                                     } else if (ticks > 10 && hits == 0) {
+                                         // 面板确实开着却没接管成功：抓一次结构，方便下一版适配
+                                         GuaguaDumpPlayerSheet(strongVC);
+                                         [t invalidate];
                                      }
                                  }];
     objc_setAssociatedObject(vc, kGuaguaPlayerTimerKey, timer,
