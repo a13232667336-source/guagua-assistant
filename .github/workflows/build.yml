@@ -1,0 +1,102 @@
+name: build-guagua
+
+# 呱呱助手：在 GitHub 的 macOS 机器上编出
+#   Guagua.dylib            —— TrollFools 注入器直接选
+#   Guagua-TrollFools.zip   —— dylib + Guagua.bundle（推荐）
+#   *.deb                   —— 越狱 / deb 注入
+#
+# 触发：push（含网页上传）、或 Actions 页面手动 Run workflow
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14
+    env:
+      THEOS: ${{ github.workspace }}/theos
+      BUILD_DIR: ${{ github.workspace }}/ffmpeg-build
+
+    steps:
+      - name: 取源码
+        uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: 装打包工具
+        run: |
+          # 缺哪样都不会挡住 dylib 的编译，deb 打不出来而已
+          brew install make || true
+          brew install dpkg || true
+          brew install ldid || true
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: 装 Theos
+        run: |
+          git clone --recursive --depth 1 https://github.com/theos/theos "$THEOS"
+
+      - name: 装 iOS SDK 16.5
+        run: |
+          mkdir -p "$THEOS/sdks"
+          git clone -n --depth=1 --filter=tree:0 https://github.com/theos/sdks /tmp/sdks
+          cd /tmp/sdks
+          git sparse-checkout set --no-cone iPhoneOS16.5.sdk
+          git checkout
+          mv /tmp/sdks/iPhoneOS16.5.sdk "$THEOS/sdks/"
+
+      - name: FFmpeg 静态库缓存
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: src/deps/ffmpeg-kit-next/build
+          key: ffmpeg-${{ hashFiles('src/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}
+
+      - name: 编 FFmpeg 静态库（首次约 20-30 分钟）
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: |
+          cd src
+          if [ ! -f deps/ffmpeg-kit-next/upstream/apple/src/FFmpegKit.m ]; then
+            echo "补 ffmpeg-kit-next 源码（网页上传没有子模块）"
+            git clone --depth 1 https://github.com/arthenica/ffmpeg-kit-next \
+              deps/ffmpeg-kit-next/upstream
+          fi
+          ./deps/ffmpeg-kit-next/build-ffmpeg.sh
+
+      - name: 编 tweak
+        run: |
+          cd src
+          make clean || true
+          make
+
+      - name: 组装交付文件
+        run: |
+          cd src
+          DYLIB=$(find .theos/obj -name 'Guagua.dylib' | head -n1)
+          echo "dylib = $DYLIB"
+          test -n "$DYLIB"
+
+          mkdir -p out
+          cp "$DYLIB" out/Guagua.dylib
+
+          STAGE=$(mktemp -d)
+          cp "$DYLIB" "$STAGE/Guagua.dylib"
+          cp -R "layout/Library/Application Support/Guagua/Guagua.bundle" "$STAGE/Guagua.bundle"
+          ( cd "$STAGE" && zip -qry "$GITHUB_WORKSPACE/src/out/Guagua-TrollFools.zip" . )
+          rm -rf "$STAGE"
+
+          make package || true
+          cp packages/*.deb out/ 2>/dev/null || true
+
+          ls -lh out
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: Guagua-Assistant
+          path: src/out/*
+          if-no-files-found: error

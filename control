@@ -1,0 +1,10 @@
+Package: com.samuel.guagua
+Name: 呱呱助手
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: 呱呱助手 —— X（Twitter）整合增强插件：一键下载视频/GIF（最高画质、直存相册）、去广告、界面与播放器修复。
+Maintainer: Samuel
+Author: Samuel
+Section: Tweaks
+Depends: mobilesubstrate
+Conflicts: com.den.twigalaxy, xyz.cypwn.twigalaxy, xyz.cypwn.bhtwitter, com.netskao.twitternoads, xyz.cypwn.bringbacktwitter, com.bandarhl.bhtwitter
