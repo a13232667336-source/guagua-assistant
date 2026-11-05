@@ -8,6 +8,7 @@
 #import "Settings/ModernSettingsViewController.h"
 #import "Core/BHTBundle.h"
 #import "Core/BHTManager.h"
+#import "Core/GuaguaEmbedded.h"
 #import "Settings/ModernSettingsCells.h"
 #import "Settings/ModernSettingsPageViewController.h"
 #import "Settings/Pages/AppearanceSettingsViewController.h"
@@ -515,6 +516,9 @@
     if (avatarFile.length > 0) {
         NSString* path = [[[BHTBundle sharedBundle] pathForFile:avatarFile] path];
         UIImage* localAvatar = path ? [UIImage imageWithContentsOfFile:path] : nil;
+        if (localAvatar == nil) {
+            localAvatar = GuaguaEmbeddedAvatar();  // 内嵌头像兜底
+        }
         avatarImageView.image = localAvatar ?: [UIImage systemImageNamed:@"person.circle.fill"];
         return;
     }

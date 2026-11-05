@@ -7,6 +7,7 @@
 //
 
 #import "BHTBundle.h"
+#import "Core/GuaguaEmbedded.h"
 #import <dlfcn.h>
 
 @interface BHTBundle ()
@@ -108,7 +109,13 @@ static NSURL* NFBFindBundleURL(void) {
 
 - (NSString*)localizedStringForKey:(NSString*)key {
     NSString* value = [self.mainBundle localizedStringForKey:key value:nil table:nil];
-    return value.length ? value : key;
+    if (value.length > 0 && ![value isEqualToString:key]) {
+        return value;
+    }
+    // 资源包没被装进去（只注入 dylib）时，用编译进二进制的这张表兜底，
+    // 保证设置页、播放器入口都不会出现 DOWNLOAD_VIDEOS_TITLE 这种原始 key。
+    NSString* embedded = GuaguaEmbeddedString(key);
+    return embedded.length ? embedded : key;
 }
 
 // Fetches one of Twitter's own strings, reusing the app's translations for
