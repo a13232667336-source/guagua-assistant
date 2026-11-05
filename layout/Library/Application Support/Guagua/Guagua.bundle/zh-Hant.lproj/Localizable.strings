@@ -190,7 +190,7 @@
 "LEGACY_LOGIN_RATE_LIMITED_MESSAGE" = "Too many attempts. Wait a while or switch network/VPN, then try again.\n\nDetails:\n%@";
 "LEGACY_LOGIN_UNKNOWN_ERROR" = "Unknown error";
 "CONTRIBUTOR_PAGE_SECTION_HEADER_TITLE" = "";
-"PLAYER_DOWNLOAD_TITLE" = "下載影片（來自呱呱助手）";
+"PLAYER_DOWNLOAD_TITLE" = "下載影片（呱呱助手）";
 "PLAYER_DOWNLOAD_NO_VIDEO_TITLE" = "沒有正在播放的影片";
 "PLAYER_DOWNLOAD_NO_VIDEO_MESSAGE" = "先播放你要下載的那條影片，再點這一項。";
 "DEVELOPER_ROLE_TITLE" = "開發者";

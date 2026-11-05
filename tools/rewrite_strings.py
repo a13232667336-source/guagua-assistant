@@ -1,4 +1,4 @@
-"""呱呱助手 —— 一次性重写插件资源包里的本地化字符串。
+﻿"""呱呱助手 —— 一次性重写插件资源包里的本地化字符串。
 
 做的事：
   1. 把所有语言里的旧名字（NeoFreeBird / BHTwitter）换成“呱呱助手”；
@@ -132,7 +132,7 @@ ZH_CN.update({
     "NFB_SETTINGS_DETAIL": "呱呱助手：让 X 更好用——一键下载、去广告、界面修复。",
     "MODERN_SETTINGS_MEDIA_TITLE": "照片与视频",
     "MODERN_SETTINGS_MEDIA_SUBTITLE": "一键下载视频与 GIF：最高画质，直接存进“照片”。",
-    "PLAYER_DOWNLOAD_TITLE": "下载视频（来自呱呱助手）",
+    "PLAYER_DOWNLOAD_TITLE": "下载视频（呱呱助手）",
     "PLAYER_DOWNLOAD_NO_VIDEO_TITLE": "没有正在播放的视频",
     "PLAYER_DOWNLOAD_NO_VIDEO_MESSAGE": "先播放你要下载的那条视频，再点这一项。",
     "DEVELOPER_ROLE_TITLE": "开发者",
@@ -145,7 +145,7 @@ ZH_HANT = {
     "NFB_SETTINGS_DETAIL": "呱呱助手：讓 X 更好用——一鍵下載、去廣告、介面修復。",
     "MODERN_SETTINGS_MEDIA_TITLE": "照片與影片",
     "MODERN_SETTINGS_MEDIA_SUBTITLE": "一鍵下載影片與 GIF：最高畫質，直接存進「照片」。",
-    "PLAYER_DOWNLOAD_TITLE": "下載影片（來自呱呱助手）",
+    "PLAYER_DOWNLOAD_TITLE": "下載影片（呱呱助手）",
     "PLAYER_DOWNLOAD_NO_VIDEO_TITLE": "沒有正在播放的影片",
     "PLAYER_DOWNLOAD_NO_VIDEO_MESSAGE": "先播放你要下載的那條影片，再點這一項。",
     "DEVELOPER_ROLE_TITLE": "開發者",
@@ -157,7 +157,7 @@ EN.update({
     "NFB_SETTINGS_DETAIL": "Guagua Assistant — one-tap downloads, no ads, and UI fixes for X.",
     "MODERN_SETTINGS_MEDIA_TITLE": "Photos and videos",
     "MODERN_SETTINGS_MEDIA_SUBTITLE": "One switch for downloads: highest quality, straight to Photos.",
-    "PLAYER_DOWNLOAD_TITLE": "Download video (from Guagua Assistant)",
+    "PLAYER_DOWNLOAD_TITLE": "Download video (Guagua Assistant)",
     "PLAYER_DOWNLOAD_NO_VIDEO_TITLE": "No video is playing",
     "PLAYER_DOWNLOAD_NO_VIDEO_MESSAGE": "Start playing the video you want, then tap this again.",
     "DEVELOPER_ROLE_TITLE": "Developer",

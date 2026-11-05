@@ -212,7 +212,7 @@
 "SHOW_ACCOUNT_LOCATION_DETAIL" = "在推文底部显示发布账号的位置信息。";
 "UPLOAD_FULL_HD_VIDEOS_DETAIL" = "上传视频时不压缩到 720p，尽量保留全高清画质。";
 "BLUE_LAUNCH_SCREEN_DETAIL" = "启动画面恢复成老版蓝色 Twitter 图标。";
-"PLAYER_DOWNLOAD_TITLE" = "下载视频（来自呱呱助手）";
+"PLAYER_DOWNLOAD_TITLE" = "下载视频（呱呱助手）";
 "PLAYER_DOWNLOAD_NO_VIDEO_TITLE" = "没有正在播放的视频";
 "PLAYER_DOWNLOAD_NO_VIDEO_MESSAGE" = "先播放你要下载的那条视频，再点这一项。";
 "DEVELOPER_ROLE_TITLE" = "开发者";

@@ -287,7 +287,7 @@
 "HIDE_GROK_ANALYZE_DETAIL" = "Hide the 'Analyze with Grok' button under Tweets.";
 "HIDE_GROK_SIDEBAR_DETAIL" = "Remove the Grok entry from the sidebar.";
 "DISABLE_SENSITIVE_TWEET_WARNINGS_DETAIL" = "Show sensitive media right away instead of behind a warning.";
-"PLAYER_DOWNLOAD_TITLE" = "Download video (from Guagua Assistant)";
+"PLAYER_DOWNLOAD_TITLE" = "Download video (Guagua Assistant)";
 "PLAYER_DOWNLOAD_NO_VIDEO_TITLE" = "No video is playing";
 "PLAYER_DOWNLOAD_NO_VIDEO_MESSAGE" = "Start playing the video you want, then tap this again.";
 "DEVELOPER_ROLE_TITLE" = "Developer";
