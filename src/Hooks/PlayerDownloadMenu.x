@@ -36,6 +36,10 @@ static NSString* GuaguaPlayerDownloadTitle(void) {
     return GuaguaString(@"PLAYER_DOWNLOAD_TITLE", @"下载视频（呱呱助手）");
 }
 
+// 前置声明：悬浮按钮要判断窗口里有没有播放器，具体实现在文件后半段
+static BOOL NFBWindowHasImmersivePlayer(UIView* view, NSInteger depth);
+static BOOL NFBWindowHasSheetClass(UIView* view, NSInteger depth);
+
 #pragma mark - 正在播放的视频地址
 
 static void NFBCollectPlayerLayers(CALayer* layer,
@@ -411,29 +415,57 @@ static void GuaguaInsertOurRow(UIWindow* window, NSArray<UILabel*>* labels) {
     }
 
     UIView* anchorRow = NFBRowContainerForLabel(anchor);
-    UIView* parent = anchorRow.superview;
-    if (parent == nil || ![parent isKindOfClass:[UIStackView class]]) {
-        NSLog(@"[Guagua] 面板没有 stack 容器，跳过插入");
+    if (anchorRow == nil) {
         return;
     }
 
-    UIStackView* stack = (UIStackView*)parent;
-    NSUInteger index = [stack.arrangedSubviews indexOfObject:anchorRow];
-    if (index == NSNotFound) {
-        index = 0;
-    }
     CGFloat height = anchorRow.bounds.size.height;
     if (height < 20.0 || height > 120.0) {
         height = 44.0;
     }
-    CGFloat width = anchorRow.bounds.size.width > 40.0 ? anchorRow.bounds.size.width
-                                                       : stack.bounds.size.width;
 
-    UIControl* row = GuaguaBuildOurRow(width, height, anchor);
-    [stack insertArrangedSubview:row atIndex:index];
-    objc_setAssociatedObject(window, kGuaguaInjectedRowKey, row,
+    // 往上找最近的 UIStackView（不要求是直接父视图，X 的每一行外面还包了一层）
+    UIView* cursor = anchorRow;
+    UIStackView* stack = nil;
+    for (NSInteger i = 0; i < 6 && cursor != nil; i++) {
+        if ([cursor.superview isKindOfClass:[UIStackView class]]) {
+            stack = (UIStackView*)cursor.superview;
+            break;
+        }
+        cursor = cursor.superview;
+    }
+
+    if (stack != nil) {
+        NSUInteger index = [stack.arrangedSubviews indexOfObject:cursor];
+        if (index == NSNotFound) {
+            index = 0;
+        }
+        CGFloat width = cursor.bounds.size.width > 40.0 ? cursor.bounds.size.width
+                                                        : stack.bounds.size.width;
+        UIControl* row = GuaguaBuildOurRow(width, height, anchor);
+        [stack insertArrangedSubview:row atIndex:index];
+        objc_setAssociatedObject(window, kGuaguaInjectedRowKey, row,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        NSLog(@"[Guagua] 已插入下载行（stack 版本）");
+        return;
+    }
+
+    // 兜底：面板不是 stack 布局时，挂一个悬浮入口在窗口右下角，保证一定能下载
+    UIView* existing = objc_getAssociatedObject(window, kGuaguaInjectedRowKey);
+    if (existing != nil) {
+        return;
+    }
+    CGFloat width = 210.0;
+    UIControl* pill = GuaguaBuildOurRow(width, 44.0, anchor);
+    pill.backgroundColor = [UIColor secondarySystemGroupedBackgroundColor];
+    pill.layer.cornerRadius = 22.0;
+    pill.frame = CGRectMake(window.bounds.size.width - width - 20.0,
+                            window.bounds.size.height - 160.0, width, 44.0);
+    pill.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
+    [window addSubview:pill];
+    objc_setAssociatedObject(window, kGuaguaInjectedRowKey, pill,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    NSLog(@"[Guagua] 已插入下载行（无官方行版本）");
+    NSLog(@"[Guagua] 面板非 stack 布局，改用悬浮入口");
 }
 #pragma mark - 方案 B：无障碍树（SwiftUI 的 Text 走这里）
 
@@ -549,6 +581,69 @@ static UIView* GuaguaBuildAccessibilityRow(UIWindow* window, CGRect screenRect) 
                 action:@selector(handleTap:)];
     [container addGestureRecognizer:tap];
     return container;
+}
+
+#pragma mark - 兜底入口：播放器右上角的常驻下载按钮
+
+// 面板结构在不同内容/版本上会变，这个按钮保证「只要能全屏播放，就一定能下载」。
+static const void* kGuaguaFABKey = &kGuaguaFABKey;
+
+static void GuaguaUpdateFloatingButton(UIWindow* window) {
+    if (window == nil) {
+        return;
+    }
+    BOOL need = NFBWindowHasImmersivePlayer(window, 0);
+    UIView* existing = objc_getAssociatedObject(window, kGuaguaFABKey);
+    if (!need) {
+        if (existing != nil) {
+            [existing removeFromSuperview];
+            objc_setAssociatedObject(window, kGuaguaFABKey, nil,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+        return;
+    }
+    if (existing != nil) {
+        [window bringSubviewToFront:existing];
+        return;
+    }
+
+    CGFloat size = 44.0;
+    UIControl* control = [[UIControl alloc] initWithFrame:CGRectMake(
+        window.bounds.size.width - size - 14.0, 112.0, size, size)];
+    control.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    control.layer.cornerRadius = size / 2.0;
+    control.clipsToBounds = YES;
+
+    UIVisualEffectView* blur = [[UIVisualEffectView alloc]
+        initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemUltraThinMaterialDark]];
+    blur.frame = control.bounds;
+    blur.userInteractionEnabled = NO;
+    [control addSubview:blur];
+
+    UIImageView* icon =
+        [[UIImageView alloc] initWithImage:[UIImage systemImageNamed:@"square.and.arrow.down"]];
+    icon.tintColor = [UIColor whiteColor];
+    icon.contentMode = UIViewContentModeScaleAspectFit;
+    icon.frame = CGRectMake((size - 20.0) / 2.0, (size - 20.0) / 2.0, 20.0, 20.0);
+    icon.userInteractionEnabled = NO;
+    [control addSubview:icon];
+
+    GuaguaRowTapProxy* proxy = [GuaguaRowTapProxy sharedProxy];
+    [control addTarget:proxy
+                action:@selector(handleTap:)
+      forControlEvents:UIControlEventTouchUpInside];
+    [control addTarget:proxy
+                action:@selector(handleTouchDown:)
+      forControlEvents:UIControlEventTouchDown];
+    [control addTarget:proxy
+                action:@selector(handleTouchUp:)
+      forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside |
+                      UIControlEventTouchCancel];
+    control.accessibilityLabel = GuaguaPlayerDownloadTitle();
+
+    [window addSubview:control];
+    objc_setAssociatedObject(window, kGuaguaFABKey, control,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 #pragma mark - 诊断转储
@@ -771,7 +866,14 @@ static void GuaguaStartWatch(UIWindow* window) {
                                          [t invalidate];
                                          return;
                                      }
+                                     BOOL playerAlive = NFBWindowHasImmersivePlayer(strongWindow, 0);
+                                     BOOL panelAlive = NFBWindowHasSheetClass(strongWindow, 0);
+                                     if (!playerAlive && !panelAlive && ticks > 4) {
+                                         [t invalidate];
+                                         return;
+                                     }
                                      GuaguaScanWindow(strongWindow);
+                                     GuaguaUpdateFloatingButton(strongWindow);
                                      hits++;
                                  }];
     objc_setAssociatedObject(window, kGuaguaWatchTimerKey, timer,
@@ -805,12 +907,9 @@ static BOOL NFBClassLooksLikeSheet(NSString* className) {
     }
     if (NFBWindowHasImmersivePlayer(window, 0) || NFBWindowHasSheetClass(window, 0)) {
         GuaguaStartWatch(window);
+        GuaguaUpdateFloatingButton(window);
     }
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
-    %orig;
-    GuaguaStopWatch(self.view.window);
-}
 
 %end
