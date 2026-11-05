@@ -162,8 +162,32 @@ static NSSet<NSString*>* NFBOfficialDownloadTitles(void) {
     return set;
 }
 
-#pragma mark - 点击代理
+// 面板里用来当“位置锚”的行：官方下载行就在这两行附近。
+static NSSet<NSString*>* NFBOfflineRowTitles(void) {
+    static NSSet* set;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        set = [NSSet setWithArray:@[
+            @"添加到离线", @"加入离线", @"保存到离线", @"add to offline", @"save offline",
+            @"offline", @"オフラインに追加", @"오프라인에 추가",
+        ]];
+    });
+    return set;
+}
 
+static NSSet<NSString*>* NFBViewPostRowTitles(void) {
+    static NSSet* set;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        set = [NSSet setWithArray:@[
+            @"前往帖子", @"查看帖子", @"go to post", @"view post", @"to post",
+            @"投稿へ移動", @"게시물로 이동",
+        ]];
+    });
+    return set;
+}
+
+#pragma mark - 点击代理
 @interface GuaguaRowTapProxy : NSObject
 + (instancetype)sharedProxy;
 - (void)handleTap:(id)sender;
@@ -312,6 +336,105 @@ static void GuaguaTakeOverRow(UILabel* label, UIView* row) {
     [row bringSubviewToFront:overlay];
 }
 
+#pragma mark - 面板里没有官方下载行时：自己插一行
+
+static const void* kGuaguaInjectedRowKey = &kGuaguaInjectedRowKey;
+
+static UIControl* GuaguaBuildOurRow(CGFloat width, CGFloat height, UILabel* anchor) {
+    UIControl* row = [[UIControl alloc] initWithFrame:CGRectMake(0, 0, width, height)];
+    row.backgroundColor = [UIColor clearColor];
+
+    CGFloat iconSize = 18.0;
+    CGFloat iconX = 18.0;
+    UIImage* image = [UIImage systemImageNamed:@"square.and.arrow.down"];
+    UIImageView* icon = [[UIImageView alloc] initWithImage:image];
+    icon.tintColor = anchor.textColor ?: [UIColor secondaryLabelColor];
+    icon.contentMode = UIViewContentModeScaleAspectFit;
+    icon.frame = CGRectMake(iconX, (height - iconSize) / 2.0, iconSize, iconSize);
+    [row addSubview:icon];
+
+    CGFloat textX = iconX + iconSize + 16.0;
+    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(textX, 0.0, MAX(80.0, width - textX - 44.0),
+                                                               height)];
+    label.text = GuaguaPlayerDownloadTitle();
+    label.font = anchor.font ?: [UIFont systemFontOfSize:16.0];
+    label.textColor = anchor.textColor ?: [UIColor labelColor];
+    label.adjustsFontSizeToFitWidth = YES;
+    label.minimumScaleFactor = 0.8;
+    [row addSubview:label];
+
+    UIImage* trailing = [UIImage systemImageNamed:@"arrow.down.circle"];
+    UIImageView* trailingView = [[UIImageView alloc] initWithImage:trailing];
+    trailingView.tintColor = [UIColor secondaryLabelColor];
+    trailingView.contentMode = UIViewContentModeScaleAspectFit;
+    trailingView.frame = CGRectMake(width - 40.0, (height - 20.0) / 2.0, 20.0, 20.0);
+    [row addSubview:trailingView];
+
+    [row addTarget:[GuaguaRowTapProxy sharedProxy]
+            action:@selector(handleTap:)
+          forControlEvents:UIControlEventTouchUpInside];
+    [row addTarget:[GuaguaRowTapProxy sharedProxy]
+            action:@selector(handleTouchDown:)
+          forControlEvents:UIControlEventTouchDown];
+    [row addTarget:[GuaguaRowTapProxy sharedProxy]
+            action:@selector(handleTouchUp:)
+          forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside |
+                          UIControlEventTouchCancel];
+    return row;
+}
+
+// 没有官方下载行时（X 对部分内容本身就不给下载），在「添加到离线 / 前往帖子」旁边插一行。
+static void GuaguaInsertOurRow(UIWindow* window, NSArray<UILabel*>* labels) {
+    if (objc_getAssociatedObject(window, kGuaguaInjectedRowKey) != nil) {
+        return;
+    }
+
+    UILabel* anchor = nil;
+    for (UILabel* label in labels) {
+        NSString* normalized = NFBTrimmedLowercase(NFBLabelText(label));
+        if (normalized.length > 0 && [NFBOfflineRowTitles() containsObject:normalized]) {
+            anchor = label;
+            break;
+        }
+    }
+    if (anchor == nil) {
+        for (UILabel* label in labels) {
+            NSString* normalized = NFBTrimmedLowercase(NFBLabelText(label));
+            if (normalized.length > 0 && [NFBViewPostRowTitles() containsObject:normalized]) {
+                anchor = label;
+                break;
+            }
+        }
+    }
+    if (anchor == nil) {
+        return;
+    }
+
+    UIView* anchorRow = NFBRowContainerForLabel(anchor);
+    UIView* parent = anchorRow.superview;
+    if (parent == nil || ![parent isKindOfClass:[UIStackView class]]) {
+        NSLog(@"[Guagua] 面板没有 stack 容器，跳过插入");
+        return;
+    }
+
+    UIStackView* stack = (UIStackView*)parent;
+    NSUInteger index = [stack.arrangedSubviews indexOfObject:anchorRow];
+    if (index == NSNotFound) {
+        index = 0;
+    }
+    CGFloat height = anchorRow.bounds.size.height;
+    if (height < 20.0 || height > 120.0) {
+        height = 44.0;
+    }
+    CGFloat width = anchorRow.bounds.size.width > 40.0 ? anchorRow.bounds.size.width
+                                                       : stack.bounds.size.width;
+
+    UIControl* row = GuaguaBuildOurRow(width, height, anchor);
+    [stack insertArrangedSubview:row atIndex:index];
+    objc_setAssociatedObject(window, kGuaguaInjectedRowKey, row,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSLog(@"[Guagua] 已插入下载行（无官方行版本）");
+}
 #pragma mark - 方案 B：无障碍树（SwiftUI 的 Text 走这里）
 
 static void NFBCollectAccessibilityElements(id container,
@@ -494,8 +617,24 @@ static void GuaguaDumpWindow(UIWindow* window) {
 
 #pragma mark - 统一扫描（窗口级）
 
-static BOOL NFBWindowHasSheetClass(UIView* view, NSInteger depth) {
+static BOOL NFBWindowHasImmersivePlayer(UIView* view, NSInteger depth) {
     if (view == nil || depth > 40) {
+        return NO;
+    }
+    NSString* name = NSStringFromClass([view class]);
+    if ([name containsString:@"ImmersiveVideoPageView"] ||
+        [name containsString:@"ImmersiveCardView"]) {
+        return YES;
+    }
+    for (UIView* subview in view.subviews) {
+        if (NFBWindowHasImmersivePlayer(subview, depth + 1)) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static BOOL NFBWindowHasSheetClass(UIView* view, NSInteger depth) {    if (view == nil || depth > 40) {
         return NO;
     }
     NSString* name = NSStringFromClass([view class]);
@@ -545,7 +684,17 @@ static BOOL GuaguaScanWindow(UIWindow* window) {
         return YES;
     }
     if (qualityLabel != nil) {
-        return YES;  // 面板在，但这个版本没有官方下载行
+        // 面板在，但这條视频 X 没给官方下载行（部分内容本来就不提供下载）→ 自己插一行
+        GuaguaInsertOurRow(window, labels);
+        return YES;
+    }
+
+    // 面板不在了：清掉之前插入的行
+    UIView* injected = objc_getAssociatedObject(window, kGuaguaInjectedRowKey);
+    if (injected != nil) {
+        [injected removeFromSuperview];
+        objc_setAssociatedObject(window, kGuaguaInjectedRowKey, nil,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 
     // ---- 2) 无障碍路径 ----
@@ -614,19 +763,16 @@ static void GuaguaStartWatch(UIWindow* window) {
     __block NSInteger ticks = 0;
     __block NSInteger hits = 0;
     NSTimer* timer = [NSTimer
-        scheduledTimerWithTimeInterval:0.4
+        scheduledTimerWithTimeInterval:0.8
                                repeats:YES
                                  block:^(NSTimer* t) {
                                      UIWindow* strongWindow = weakWindow;
-                                     if (strongWindow == nil || ticks++ > 50) {
+                                     if (strongWindow == nil || ticks++ > 900) {
                                          [t invalidate];
                                          return;
                                      }
-                                     if (GuaguaScanWindow(strongWindow)) {
-                                         if (++hits >= 4) {
-                                             [t invalidate];
-                                         }
-                                     }
+                                     GuaguaScanWindow(strongWindow);
+                                     hits++;
                                  }];
     objc_setAssociatedObject(window, kGuaguaWatchTimerKey, timer,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -657,9 +803,7 @@ static BOOL NFBClassLooksLikeSheet(NSString* className) {
     if (window == nil) {
         return;
     }
-    if (NFBHasPlayingVideo()) {
-        GuaguaStartWatch(window);
-    } else if (NFBWindowHasSheetClass(window, 0)) {
+    if (NFBWindowHasImmersivePlayer(window, 0) || NFBWindowHasSheetClass(window, 0)) {
         GuaguaStartWatch(window);
     }
 }
