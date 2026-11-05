@@ -1,4 +1,4 @@
-name: build-guagua
+﻿name: build-guagua
 
 # 呱呱助手：在 GitHub 的 macOS 机器上编出
 #   Guagua.dylib            —— TrollFools 注入器直接选
@@ -51,16 +51,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src/deps/ffmpeg-kit-next/build
-          key: ffmpeg-${{ hashFiles('src/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}-v2
+          key: ffmpeg-${{ hashFiles('src/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}-v3
 
       - name: 编 FFmpeg 静态库（首次约 20-30 分钟）
         if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
         run: |
           cd src
           if [ ! -f deps/ffmpeg-kit-next/upstream/apple/src/FFmpegKit.m ]; then
-            echo "补 ffmpeg-kit-next 源码（没有子模块）"
-            git clone --depth 1 https://github.com/arthenica/ffmpeg-kit-next \
-              deps/ffmpeg-kit-next/upstream
+            echo "取 ffmpeg-kit-next（锁定上游子模块的 commit）"
+            git init -q deps/ffmpeg-kit-next/upstream
+            cd deps/ffmpeg-kit-next/upstream
+            git remote add origin https://github.com/arthenica/ffmpeg-kit-next
+            git fetch -q --depth 1 origin 3e223118e6e8fb6208693ecf3952e77cd096f587
+            git checkout -q FETCH_HEAD
+            cd "$GITHUB_WORKSPACE/src"
           fi
           # 防止脚本被检出成 CRLF（会让 set -o pipefail 报 invalid option name）
           sed -i '' -e 's/\r$//' deps/ffmpeg-kit-next/build-ffmpeg.sh
