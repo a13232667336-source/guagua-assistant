@@ -65,6 +65,8 @@ jobs:
             git clone --depth 1 https://github.com/arthenica/ffmpeg-kit-next \
               deps/ffmpeg-kit-next/upstream
           fi
+          # 兜底：万一脚本被 Windows 检出成 CRLF，先转回 LF
+          perl -pi -e 's/$//' deps/ffmpeg-kit-next/build-ffmpeg.sh
           bash ./deps/ffmpeg-kit-next/build-ffmpeg.sh
 
       - name: 编 tweak

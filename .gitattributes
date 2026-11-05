@@ -1,0 +1,16 @@
+# 仓库内统一 LF：Windows 上检出/上传时也不会把 shell 脚本变成 CRLF
+* text=auto eol=lf
+
+*.sh text eol=lf
+Makefile text eol=lf
+*.m text eol=lf
+*.x text eol=lf
+*.h text eol=lf
+*.strings text eol=lf
+*.yml text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.aac binary
+*.zip binary
