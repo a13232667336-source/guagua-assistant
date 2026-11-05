@@ -340,7 +340,7 @@ static void GuaguaTakeOverRow(UILabel* label, UIView* row) {
     [row bringSubviewToFront:overlay];
 }
 
-#pragma mark - 面板里没有官方下载行时：自己插一行
+#pragma mark - 官方行整行移除 + 我们的行插到面板第一行
 
 static const void* kGuaguaInjectedRowKey = &kGuaguaInjectedRowKey;
 
@@ -358,8 +358,9 @@ static UIControl* GuaguaBuildOurRow(CGFloat width, CGFloat height, UILabel* anch
     [row addSubview:icon];
 
     CGFloat textX = iconX + iconSize + 16.0;
-    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(textX, 0.0, MAX(80.0, width - textX - 44.0),
-                                                               height)];
+    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(textX, 0.0,
+                                                              MAX(80.0, width - textX - 44.0),
+                                                              height)];
     label.text = GuaguaPlayerDownloadTitle();
     label.font = anchor.font ?: [UIFont systemFontOfSize:16.0];
     label.textColor = anchor.textColor ?: [UIColor labelColor];
@@ -367,54 +368,67 @@ static UIControl* GuaguaBuildOurRow(CGFloat width, CGFloat height, UILabel* anch
     label.minimumScaleFactor = 0.8;
     [row addSubview:label];
 
-    UIImage* trailing = [UIImage systemImageNamed:@"arrow.down.circle"];
-    UIImageView* trailingView = [[UIImageView alloc] initWithImage:trailing];
-    trailingView.tintColor = [UIColor secondaryLabelColor];
-    trailingView.contentMode = UIViewContentModeScaleAspectFit;
-    trailingView.frame = CGRectMake(width - 40.0, (height - 20.0) / 2.0, 20.0, 20.0);
-    [row addSubview:trailingView];
+    UIImageView* trailing =
+        [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"arrow.down.circle"]];
+    trailing.image = [UIImage systemImageNamed:@"arrow.down.circle"];
+    trailing.tintColor = [UIColor secondaryLabelColor];
+    trailing.contentMode = UIViewContentModeScaleAspectFit;
+    trailing.frame = CGRectMake(width - 40.0, (height - 20.0) / 2.0, 20.0, 20.0);
+    [row addSubview:trailing];
 
-    [row addTarget:[GuaguaRowTapProxy sharedProxy]
+    GuaguaRowTapProxy* proxy = [GuaguaRowTapProxy sharedProxy];
+    [row addTarget:proxy
             action:@selector(handleTap:)
           forControlEvents:UIControlEventTouchUpInside];
-    [row addTarget:[GuaguaRowTapProxy sharedProxy]
+    [row addTarget:proxy
             action:@selector(handleTouchDown:)
           forControlEvents:UIControlEventTouchDown];
-    [row addTarget:[GuaguaRowTapProxy sharedProxy]
+    [row addTarget:proxy
             action:@selector(handleTouchUp:)
-          forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside |
+          forControlEvents:UIControlEventTouchInside | UIControlEventTouchUpOutside |
                           UIControlEventTouchCancel];
     return row;
 }
 
-// 没有官方下载行时（X 对部分内容本身就不给下载），在「添加到离线 / 前往帖子」旁边插一行。
-static void GuaguaInsertOurRow(UIWindow* window, NSArray<UILabel*>* labels) {
+// 官方那一行整行拿掉：从 stack 的 arrangedSubviews 里摘掉，再从视图树移除。
+static void GuaguaRemoveRow(UIView* row) {
+    if (row == nil) {
+        return;
+    }
+    UIView* parent = row.superview;
+    if ([parent isKindOfClass:[UIStackView class]]) {
+        [(UIStackView*)parent removeArrangedSubview:row];
+    }
+    row.hidden = YES;
+    row.alpha = 0.0;
+    [row removeFromSuperview];
+}
+
+// 往上找最近的 UIStackView（X 每行外面常再包一层，直接父视图不一定是 stack）。
+static UIStackView* GuaguaNearestStack(UIView* view, UIView** outChild) {
+    UIView* cursor = view;
+    for (NSInteger i = 0; i < 6 && cursor != nil; i++) {
+        if ([cursor.superview isKindOfClass:[UIStackView class]]) {
+            if (outChild != NULL) {
+                *outChild = cursor;
+            }
+            return (UIStackView*)cursor.superview;
+        }
+        cursor = cursor.superview;
+    }
+    return nil;
+}
+
+// 把我们的行插到面板「第一行」——也就是「质量」那一行的上面。
+static void GuaguaInsertOurRowAtTop(UIWindow* window, UILabel* topAnchor) {
+    if (window == nil || topAnchor == nil) {
+        return;
+    }
     if (objc_getAssociatedObject(window, kGuaguaInjectedRowKey) != nil) {
         return;
     }
 
-    UILabel* anchor = nil;
-    for (UILabel* label in labels) {
-        NSString* normalized = NFBTrimmedLowercase(NFBLabelText(label));
-        if (normalized.length > 0 && [NFBOfflineRowTitles() containsObject:normalized]) {
-            anchor = label;
-            break;
-        }
-    }
-    if (anchor == nil) {
-        for (UILabel* label in labels) {
-            NSString* normalized = NFBTrimmedLowercase(NFBLabelText(label));
-            if (normalized.length > 0 && [NFBViewPostRowTitles() containsObject:normalized]) {
-                anchor = label;
-                break;
-            }
-        }
-    }
-    if (anchor == nil) {
-        return;
-    }
-
-    UIView* anchorRow = NFBRowContainerForLabel(anchor);
+    UIView* anchorRow = NFBRowContainerForLabel(topAnchor);
     if (anchorRow == nil) {
         return;
     }
@@ -424,49 +438,39 @@ static void GuaguaInsertOurRow(UIWindow* window, NSArray<UILabel*>* labels) {
         height = 44.0;
     }
 
-    // 往上找最近的 UIStackView（不要求是直接父视图，X 的每一行外面还包了一层）
-    UIView* cursor = anchorRow;
-    UIStackView* stack = nil;
-    for (NSInteger i = 0; i < 6 && cursor != nil; i++) {
-        if ([cursor.superview isKindOfClass:[UIStackView class]]) {
-            stack = (UIStackView*)cursor.superview;
-            break;
-        }
-        cursor = cursor.superview;
-    }
+    UIView* child = anchorRow;
+    UIStackView* stack = GuaguaNearestStack(anchorRow, &child);
 
     if (stack != nil) {
-        NSUInteger index = [stack.arrangedSubviews indexOfObject:cursor];
+        NSUInteger index = [stack.arrangedSubviews indexOfObject:child];
         if (index == NSNotFound) {
             index = 0;
         }
-        CGFloat width = cursor.bounds.size.width > 40.0 ? cursor.bounds.size.width
-                                                        : stack.bounds.size.width;
-        UIControl* row = GuaguaBuildOurRow(width, height, anchor);
+        CGFloat width = child.bounds.size.width > 40.0 ? child.bounds.size.width
+                                                       : stack.bounds.size.width;
+        UIControl* row = GuaguaBuildOurRow(width, height, topAnchor);
         [stack insertArrangedSubview:row atIndex:index];
         objc_setAssociatedObject(window, kGuaguaInjectedRowKey, row,
                                  OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        NSLog(@"[Guagua] 已插入下载行（stack 版本）");
+        NSLog(@"[Guagua] 下载行已插入面板第一位");
         return;
     }
 
-    // 兜底：面板不是 stack 布局时，挂一个悬浮入口在窗口右下角，保证一定能下载
-    UIView* existing = objc_getAssociatedObject(window, kGuaguaInjectedRowKey);
-    if (existing != nil) {
-        return;
-    }
+    // 面板不是 stack 布局时的兜底：窗口里挂一个悬浮入口，保证能下载
     CGFloat width = 210.0;
-    UIControl* pill = GuaguaBuildOurRow(width, 44.0, anchor);
-    pill.backgroundColor = [UIColor secondarySystemGroupedBackgroundColor];
+    UIControl* pill = GuaguaBuildOurRow(width, 44.0, topAnchor);
+    pill.backgroundColor = [UIColor secondarySystemBackgroundColor];
     pill.layer.cornerRadius = 22.0;
     pill.frame = CGRectMake(window.bounds.size.width - width - 20.0,
-                            window.bounds.size.height - 160.0, width, 44.0);
-    pill.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
+                            window.bounds.size.height - 170.0, width, 44.0);
+    pill.autoresizingMask =
+        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
     [window addSubview:pill];
     objc_setAssociatedObject(window, kGuaguaInjectedRowKey, pill,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     NSLog(@"[Guagua] 面板非 stack 布局，改用悬浮入口");
 }
+
 #pragma mark - 方案 B：无障碍树（SwiftUI 的 Text 走这里）
 
 static void NFBCollectAccessibilityElements(id container,
@@ -753,15 +757,20 @@ static BOOL GuaguaScanWindow(UIWindow* window) {
         return NO;
     }
 
+    UIView* injected = objc_getAssociatedObject(window, kGuaguaInjectedRowKey);
+
     // ---- 1) 标签路径 ----
     NSMutableArray<UILabel*>* labels = [NSMutableArray array];
     NFBCollectLabels(window, labels, 0);
+
     UILabel* qualityLabel = nil;
     UILabel* downloadLabel = nil;
-    NSString* ours = GuaguaPlayerDownloadTitle();
     for (UILabel* label in labels) {
-        NSString* raw = NFBLabelText(label);
-        NSString* normalized = NFBTrimmedLowercase(raw);
+        // 跳过我们自己插的那一行，别把它当成官方行
+        if (injected != nil && [label isDescendantOfView:injected]) {
+            continue;
+        }
+        NSString* normalized = NFBTrimmedLowercase(NFBLabelText(label));
         if (normalized.length == 0) {
             continue;
         }
@@ -769,34 +778,35 @@ static BOOL GuaguaScanWindow(UIWindow* window) {
             qualityLabel = label;
             continue;
         }
-        if (downloadLabel == nil && ([NFBOfficialDownloadTitles() containsObject:normalized] ||
-                                     [raw isEqualToString:ours])) {
+        if (downloadLabel == nil && [NFBOfficialDownloadTitles() containsObject:normalized]) {
             downloadLabel = label;
         }
     }
-    if (qualityLabel != nil && downloadLabel != nil) {
-        GuaguaTakeOverRow(downloadLabel, NFBRowContainerForLabel(downloadLabel));
-        return YES;
-    }
+
     if (qualityLabel != nil) {
-        // 面板在，但这條视频 X 没给官方下载行（部分内容本来就不提供下载）→ 自己插一行
-        GuaguaInsertOurRow(window, labels);
+        // 官方那一行：整行移除（不是改名）
+        if (downloadLabel != nil) {
+            GuaguaRemoveRow(NFBRowContainerForLabel(downloadLabel));
+            NSLog(@"[Guagua] 已移除官方下载行");
+        }
+        // 我们的行：插到面板第一位（「质量」上方）
+        GuaguaInsertOurRowAtTop(window, qualityLabel);
         return YES;
     }
 
     // 面板不在了：清掉之前插入的行
-    UIView* injected = objc_getAssociatedObject(window, kGuaguaInjectedRowKey);
     if (injected != nil) {
         [injected removeFromSuperview];
         objc_setAssociatedObject(window, kGuaguaInjectedRowKey, nil,
                                  OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 
-    // ---- 2) 无障碍路径 ----
+    // ---- 2) 无障碍路径（纯 SwiftUI 面板的兜底）----
     NSMutableArray* elements = [NSMutableArray array];
     NFBCollectAccessibilityElements(window, elements, 0);
     CGRect downloadFrame = CGRectZero;
     BOOL hasQuality = NO;
+    NSString* ours = GuaguaPlayerDownloadTitle();
     for (id element in elements) {
         NSString* label = NFBAccessibilityLabel(element);
         NSString* normalized = NFBTrimmedLowercase(label);
