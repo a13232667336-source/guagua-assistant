@@ -479,6 +479,65 @@ static void NFBInstallNavBarEntry(UIViewController* vc) {
     NSLog(@"[NFB] 设置页齿轮入口已挂上: %@", NSStringFromClass([vc class]));
 }
 
+// 设置页判定：页面里必须有「搜索设置」搜索框（播放器面板没有）
+static BOOL NFBViewHasSettingsSearch(UIView* view, NSInteger depth) {
+    if (view == nil || depth > 40) {
+        return NO;
+    }
+    if ([view isKindOfClass:[UITextField class]]) {
+        NSString* text = ((UITextField*)view).placeholder ?: ((UITextField*)view).text;
+        if ([text containsString:@"搜索"] || [text.lowercaseString containsString:@"search"]) {
+            return YES;
+        }
+    }
+    if ([view isKindOfClass:[UISearchBar class]]) {
+        NSString* text = ((UISearchBar*)view).placeholder;
+        if ([text containsString:@"搜索"] || [text.lowercaseString containsString:@"search"]) {
+            return YES;
+        }
+    }
+    if ([view isKindOfClass:[UILabel class]]) {
+        NSString* text = ((UILabel*)view).text;
+        if ([text containsString:@"搜索设置"] ||
+            [text.lowercaseString containsString:@"search settings"]) {
+            return YES;
+        }
+    }
+    for (UIView* subview in view.subviews) {
+        if (NFBViewHasSettingsSearch(subview, depth + 1)) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static void NFBCollectControllers(UIViewController* vc, NSMutableArray* out) {
+    if (vc == nil || out.count > 80) {
+        return;
+    }
+    [out addObject:vc];
+    for (UIViewController* child in vc.childViewControllers) {
+        NFBCollectControllers(child, out);
+    }
+    NFBCollectControllers(vc.presentedViewController, out);
+}
+
+static NSArray<UIViewController*>* NFBAllControllers(void) {
+    NSMutableArray* out = [NSMutableArray array];
+    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) {
+            continue;
+        }
+        for (UIWindow* window in ((UIWindowScene*)scene).windows) {
+            if (window.hidden || window.alpha < 0.01) {
+                continue;
+            }
+            NFBCollectControllers(window.rootViewController, out);
+        }
+    }
+    return out;
+}
+
 // 只认“真正在屏幕上、叶子级”的设置页；容器控制器 / 播放器面板一律跳过
 static BOOL NFBIsLeafPage(UIViewController* vc) {
     if (vc.childViewControllers.count > 0) {
