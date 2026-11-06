@@ -579,13 +579,71 @@ static UIView* GuaguaBuildAccessibilityRow(UIWindow* window, CGRect screenRect) 
 
 #pragma mark - 播放器里的悬浮下载按钮（官方行保持不动）
 
+
+// 最上层控制器是不是沉浸式播放器（时间线、帖子详情都不算）
+static BOOL NFBTopIsImmersivePlayer(void) {
+    UIWindow* window = nil;
+    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) {
+            continue;
+        }
+        for (UIWindow* candidate in ((UIWindowScene*)scene).windows) {
+            if (!candidate.hidden && candidate.alpha > 0.01 && candidate.isKeyWindow) {
+                window = candidate;
+                break;
+            }
+        }
+        if (window != nil) {
+            break;
+        }
+    }
+    if (window == nil) {
+        return NO;
+    }
+    UIViewController* vc = window.rootViewController;
+    for (NSInteger i = 0; i < 8 && vc != nil; i++) {
+        if ([vc isKindOfClass:[UINavigationController class]]) {
+            vc = ((UINavigationController*)vc).visibleViewController;
+            continue;
+        }
+        if ([vc isKindOfClass:[UITabBarController class]]) {
+            vc = ((UITabBarController*)vc).selectedViewController;
+            continue;
+        }
+        UIViewController* presented = vc.presentedViewController;
+        if (presented != nil) {
+            vc = presented;
+            continue;
+        }
+        break;
+    }
+    if (vc == nil) {
+        return NO;
+    }
+    NSString* name = NSStringFromClass([vc class]);
+    return [name containsString:@"Immersive"] || [name isEqualToString:@"T1ImmersiveViewController"] ||
+           [name isEqualToString:@"T1ImmersiveViewControllerV2"];
+}
+
+// 播放器设置面板是否已经打开（打开时收起胶囊，避免盖住面板）
+static BOOL NFBPlayerPanelIsOpen(UIWindow* window) {
+    NSMutableArray<UILabel*>* labels = [NSMutableArray array];
+    NFBCollectLabels(window, labels, 0);
+    for (UILabel* label in labels) {
+        if ([NFBQualityRowTitles() containsObject:NFBTrimmedLowercase(NFBLabelText(label))]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 static const void* kGuaguaPlayerPillKey = &kGuaguaPlayerPillKey;
 
 static void GuaguaUpdatePlayerDownloadPill(UIWindow* window) {
     if (window == nil) {
         return;
     }
-    BOOL need = NFBWindowHasImmersivePlayer(window, 0);
+    BOOL need = NFBTopIsImmersivePlayer() && !NFBPlayerPanelIsOpen(window);
     UIView* existing = objc_getAssociatedObject(window, kGuaguaPlayerPillKey);
     if (!need) {
         if (existing != nil) {
@@ -870,9 +928,9 @@ static BOOL NFBClassLooksLikeSheet(NSString* className) {
     if (window == nil) {
         return;
     }
+    GuaguaUpdatePlayerDownloadPill(window);
     if (NFBWindowHasImmersivePlayer(window, 0) || NFBWindowHasSheetClass(window, 0)) {
         GuaguaStartWatch(window);
-        GuaguaUpdatePlayerDownloadPill(window);
     }
 }
 

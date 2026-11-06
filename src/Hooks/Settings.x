@@ -567,10 +567,25 @@ static BOOL NFBIsSettingsRootPage(UIViewController* vc) {
     if (!NFBIsLeafPage(vc)) {
         return NO;
     }
-    if (!NFBLooksLikeSettingsScreen(vc)) {
+    NSString* name = NSStringFromClass([vc class]);
+    // 播放器的设置面板类名里也带 Settings，必须排除掉
+    if ([name containsString:@"Video"] || [name containsString:@"Player"] ||
+        [name containsString:@"Immersive"] || [name containsString:@"Media"] ||
+        [name containsString:@"Sheet"] || [name containsString:@"Broadcast"]) {
         return NO;
     }
-    // 设置页一定有「搜索设置」搜索框；播放器面板没有
+    UINavigationController* nav = vc.navigationController;
+    BOOL isFirstPage = (nav == nil || nav.viewControllers.firstObject == vc);
+    if (!isFirstPage) {
+        return NO;
+    }
+    if ([name containsString:@"Setting"] || [name containsString:@"Preference"]) {
+        return YES;
+    }
+    NSString* title = vc.navigationItem.title ?: @"";
+    if ([title containsString:@"设置"] || [title.lowercaseString containsString:@"settings"]) {
+        return YES;
+    }
     return NFBViewHasSettingsSearch(vc.view, 0);
 }
 
