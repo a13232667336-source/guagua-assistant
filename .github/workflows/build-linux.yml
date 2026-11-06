@@ -76,6 +76,19 @@ jobs:
           ls -d "$BUILD_DIR"/FFmpeg-* 2>/dev/null || true
           tail -n 120 "$BUILD_DIR"/FFmpeg-*/ffbuild/config.log 2>/dev/null || true
 
+      - name: ldid-stub
+        run: |
+          # 只为交叉编译准备：TrollFools 注入时会自己重签，这里给个空实现
+          sudo tee /usr/local/bin/ldid >/dev/null <<'EOF'
+          #!/bin/sh
+          exit 0
+          EOF
+          sudo chmod +x /usr/local/bin/ldid
+          mkdir -p "$THEOS/bin"
+          cp /usr/local/bin/ldid "$THEOS/bin/ldid"
+          chmod +x "$THEOS/bin/ldid"
+          ldid -S /dev/null && echo "ldid stub ok"
+
       - name: build tweak
         run: |
           cd src
