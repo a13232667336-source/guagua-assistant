@@ -23,4 +23,8 @@
 + (BOOL)boolForKey:(NSString*)key;
 + (NSInteger)integerForKey:(NSString*)key;
 
++ (void)synchronizeDownloadMasterToggles;
++ (BOOL)downloadMasterEnabled;
+
+
 @end

@@ -138,59 +138,10 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                 @"titleKey": @"MODERN_SETTINGS_MEDIA_TITLE",
                 @"subtitleKey": @"MODERN_SETTINGS_MEDIA_SUBTITLE",
                 @"settings": @[
+                    // 一键总开关：其余下载相关项由它统一带动，不再单独显示
                     @{
                         @"key": @"download_videos",
                         @"default": @YES,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"download_highest_quality",
-                        @"parentKey": @"download_videos",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"download_all_videos",
-                        @"parentKey": @"download_videos",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{@"key": @"direct_save",
-                      @"default": @NO,
-                      @"type": @"toggle"},
-                    @{
-                        @"key": @"disable_video_captions",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"auto_highest_load",
-                        @"default": @YES,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"force_tweet_full_frame",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"restore_video_timestamp",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"disable_immersive_scroll",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"disable_video_docking",
-                        @"default": @NO,
-                        @"type": @"toggle"
-                    },
-                    @{
-                        @"key": @"tap_to_pause",
-                        @"default": @NO,
                         @"type": @"toggle"
                     }
                 ]
@@ -489,6 +440,7 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsIndex(void) {
 // names to the normalised keys, so existing installs keep their settings.
 + (void)load {
     [self migrateUndoTweetToggle];
+    [self synchronizeDownloadMasterToggles];
 
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     if ([defaults boolForKey:@"nfb_key_migration_v1_done"]) {
@@ -617,4 +569,38 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsIndex(void) {
     return [[self settingForKey:key][@"default"] integerValue];
 }
 
+#pragma mark - 下载媒体总开关
+
+// 这些项不再单独出现在设置界面，全部跟随「下载媒体」：
+//   始终下载最高画质 / 下载所有视频 / 保存到“照片” / 高质量媒体
++ (NSArray<NSString*>*)togglesDrivenByDownloadMaster {
+    static NSArray<NSString*>* keys;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        keys = @[
+            @"download_highest_quality",
+            @"download_all_videos",
+            @"direct_save",
+            @"auto_highest_load",
+        ];
+    });
+    return keys;
+}
+
++ (void)synchronizeDownloadMasterToggles {
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    BOOL master = [self boolForKey:@"download_videos"];
+    for (NSString* key in [self togglesDrivenByDownloadMaster]) {
+        if ([defaults objectForKey:key] == nil || [defaults boolForKey:key] != master) {
+            [defaults setBool:master forKey:key];
+        }
+    }
+    [defaults synchronize];
+}
+
++ (BOOL)downloadMasterEnabled {
+    return [self boolForKey:@"download_videos"];
+}
+
 @end
+

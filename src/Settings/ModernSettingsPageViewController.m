@@ -259,6 +259,10 @@
     NSString* key = objc_getAssociatedObject(sender, @"prefKey");
     if (key) {
         [[NSUserDefaults standardUserDefaults] setBool:sender.isOn forKey:key];
+        // 「下载媒体」一键式：总开关一动，其余下载相关项全部跟着走
+        if ([key isEqualToString:@"download_videos"]) {
+            [BHTSettings synchronizeDownloadMasterToggles];
+        }
         [self updateAndAnimateChangesForKey:key];
     }
 }
