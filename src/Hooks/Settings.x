@@ -588,6 +588,43 @@ static NSString* NFBDescribeTopController(void) {
 }
 
 // 载入自检：证明 dylib 真的被注入并执行了；顺便可以点“检测当前界面”把类名报出来。
+
+// 把运行时里所有“设置相关”的类名导出到剪贴板：不用你在设置页里点来点去，
+// 我拿到这份清单就能确定 X 12.4x 用的是哪个类。
+static NSString* NFBDumpSettingsClasses(void) {
+    int count = objc_getClassList(NULL, 0);
+    if (count <= 0) {
+        return @"(no classes)";
+    }
+    Class* classes = (Class*)malloc(sizeof(Class) * (size_t)count);
+    if (classes == NULL) {
+        return @"(alloc failed)";
+    }
+    count = objc_getClassList(classes, count);
+
+    NSMutableArray<NSString*>* hits = [NSMutableArray array];
+    for (int i = 0; i < count; i++) {
+        const char* name = class_getName(classes[i]);
+        if (name == NULL) {
+            continue;
+        }
+        NSString* string = [NSString stringWithUTF8String:name];
+        if ([string containsString:@"Setting"] || [string containsString:@"Preferences"] ||
+            [string containsString:@"Preference"]) {
+            [hits addObject:string];
+        }
+    }
+    free(classes);
+
+    [hits sortUsingSelector:@selector(compare:)];
+    NSString* report = [NSString stringWithFormat:@"total classes: %d\nhits: %lu\n\n%@", count,
+                                                  (unsigned long)hits.count,
+                                                  [hits componentsJoinedByString:@"\n"]];
+    UIPasteboard.generalPasteboard.string = report;
+    NSLog(@"[NFB] settings classes dumped: %lu", (unsigned long)hits.count);
+    return report;
+}
+
 %ctor {
     NFBStartEntryWatcher();
 
@@ -608,6 +645,29 @@ static NSString* NFBDescribeTopController(void) {
                        [alert addAction:[UIAlertAction actionWithTitle:@"知道了"
                                                                 style:UIAlertActionStyleCancel
                                                               handler:nil]];
+                       [alert addAction:[UIAlertAction
+                                            actionWithTitle:@"导出设置类名"
+                                                      style:UIAlertActionStyleDefault
+                                                    handler:^(UIAlertAction* action) {
+                                                        NSString* dump = NFBDumpSettingsClasses();
+                                                        NSUInteger lines =
+                                                            [[dump componentsSeparatedByString:@"\n"]
+                                                                count];
+                                                        UIAlertController* info = [UIAlertController
+                                                            alertControllerWithTitle:@"已复制到剪贴板"
+                                                                             message:[NSString
+                                                                                         stringWithFormat:@"共导出 %lu 行，直接粘贴发我即可。",
+                                                                                                          (unsigned long)lines]
+                                                                      preferredStyle:UIAlertControllerStyleAlert];
+                                                        [info addAction:[UIAlertAction
+                                                                            actionWithTitle:@"好"
+                                                                                      style:UIAlertActionStyleDefault
+                                                                                    handler:nil]];
+                                                        [topMostController()
+                                                            presentViewController:info
+                                                                         animated:YES
+                                                                       completion:nil];
+                                                    }]];
                        [alert addAction:[UIAlertAction
                                             actionWithTitle:@"检测当前界面"
                                                       style:UIAlertActionStyleDefault
