@@ -489,3 +489,154 @@ static void NFBInstallFallbackEntry(UIViewController* vc) {
 }
 
 %end
+
+// MARK: - 不依赖生命周期的入口安装器 + 载入自检
+
+// 有些类的 viewDidAppear 不调用 super，所以不能只靠 hook 生命周期。
+// 这里用 1 秒一次的轻量轮询：看当前最上层控制器是不是设置页，是就把入口补上。
+
+// 扫所有窗口、所有子控制器/弹出控制器，避免 key window 判断在 Dash 分屏下失准
+static void NFBCollectControllers(UIViewController* vc, NSMutableArray* out) {
+    if (vc == nil || out.count > 60) {
+        return;
+    }
+    [out addObject:vc];
+    for (UIViewController* child in vc.childViewControllers) {
+        NFBCollectControllers(child, out);
+    }
+    NFBCollectControllers(vc.presentedViewController, out);
+}
+
+static NSArray<UIViewController*>* NFBAllControllers(void) {
+    NSMutableArray* out = [NSMutableArray array];
+    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) {
+            continue;
+        }
+        for (UIWindow* window in ((UIWindowScene*)scene).windows) {
+            if (window.hidden || window.alpha < 0.01) {
+                continue;
+            }
+            NFBCollectControllers(window.rootViewController, out);
+        }
+    }
+    return out;
+}
+
+static void NFBInstallEntryIfNeeded(UIViewController* vc) {
+    if (vc == nil) {
+        return;
+    }
+    if (!NFBLooksLikeSettingsScreen(vc)) {
+        return;
+    }
+    if (NFBSectionsHaveEntry(vc)) {
+        return;
+    }
+    // 结构对得上就按原生方式插一行
+    if ([vc isKindOfClass:objc_getClass("TFNItemsDataViewController")]) {
+        @try {
+            insertNeoFreeBirdSettingsIfRoot((TFNItemsDataViewController*)vc);
+        } @catch (__unused NSException* exception) {
+        }
+        if (NFBSectionsHaveEntry(vc)) {
+            return;
+        }
+    }
+    // 插不进去就挂悬浮入口（保证一定有东西可点）
+    NFBInstallFallbackEntry(vc);
+}
+
+static void NFBStartEntryWatcher(void) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSTimer* timer = [NSTimer
+            scheduledTimerWithTimeInterval:1.0
+                                   repeats:YES
+                                     block:^(NSTimer* t) {
+                                         if (UIApplication.sharedApplication.applicationState !=
+                                             UIApplicationStateActive) {
+                                             return;
+                                         }
+                                         for (UIViewController* vc in NFBAllControllers()) {
+                                             NFBInstallEntryIfNeeded(vc);
+                                         }
+                                     }];
+        [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+    });
+}
+
+static NSString* NFBDescribeTopController(void) {
+    UIViewController* top = topMostController();
+    if (top == nil) {
+        return @"顶层: (nil)";
+    }
+    NSString* name = NSStringFromClass([top class]);
+    NSString* title = top.navigationItem.title ?: @"";
+    NSString* looks = NFBLooksLikeSettingsScreen(top) ? @"是" : @"否";
+    BOOL hasEntry = NFBSectionsHaveEntry(top);
+    NSUInteger windows = 0;
+    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
+        if ([scene isKindOfClass:[UIWindowScene class]]) {
+            windows += ((UIWindowScene*)scene).windows.count;
+        }
+    }
+    return [NSString stringWithFormat:@"顶层控制器: %@\n标题: %@\n判定为设置页: %@\n已有插件条目: %@\n窗口数: %lu\n控制器数: %lu",
+                                      name, title, looks, hasEntry ? @"是" : @"否",
+                                      (unsigned long)windows,
+                                      (unsigned long)NFBAllControllers().count];
+}
+
+// 载入自检：证明 dylib 真的被注入并执行了；顺便可以点“检测当前界面”把类名报出来。
+%ctor {
+    NFBStartEntryWatcher();
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+                       if ([defaults boolForKey:@"nfb_710_loaded_toast"]) {
+                           return;
+                       }
+                       [defaults setBool:YES forKey:@"nfb_710_loaded_toast"];
+
+                       UIAlertController* alert = [UIAlertController
+                           alertControllerWithTitle:@"呱呱助手 · 载入自检"
+                                            message:[NSString
+                                                        stringWithFormat:@"v7.1.0 已注入并运行。\n%@",
+                                                                         NFBDescribeTopController()]
+                                     preferredStyle:UIAlertControllerStyleAlert];
+                       [alert addAction:[UIAlertAction actionWithTitle:@"知道了"
+                                                                style:UIAlertActionStyleCancel
+                                                              handler:nil]];
+                       [alert addAction:[UIAlertAction
+                                            actionWithTitle:@"检测当前界面"
+                                                      style:UIAlertActionStyleDefault
+                                                    handler:^(UIAlertAction* action) {
+                                                        NSString* info =
+                                                            NFBDescribeTopController();
+                                                        UIPasteboard.generalPasteboard.string =
+                                                            info;
+                                                        UIAlertController* second =
+                                                            [UIAlertController
+                                                                alertControllerWithTitle:
+                                                                    @"当前界面"
+                                                                                 message:info
+                                                                          preferredStyle:
+                                                                              UIAlertControllerStyleAlert];
+                                                        [second
+                                                            addAction:
+                                                                [UIAlertAction
+                                                                    actionWithTitle:@"好"
+                                                                              style:
+                                                                                  UIAlertActionStyleDefault
+                                                                            handler:nil]];
+                                                        [topMostController()
+                                                            presentViewController:second
+                                                                         animated:YES
+                                                                       completion:nil];
+                                                    }]];
+                       [topMostController() presentViewController:alert
+                                                        animated:YES
+                                                      completion:nil];
+                   });
+}
