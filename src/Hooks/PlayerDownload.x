@@ -577,6 +577,47 @@ static UIView* GuaguaBuildAccessibilityRow(UIWindow* window, CGRect screenRect) 
     return container;
 }
 
+#pragma mark - 播放器里的悬浮下载按钮（官方行保持不动）
+
+static const void* kGuaguaPlayerPillKey = &kGuaguaPlayerPillKey;
+
+static void GuaguaUpdatePlayerDownloadPill(UIWindow* window) {
+    if (window == nil) {
+        return;
+    }
+    BOOL need = NFBWindowHasImmersivePlayer(window, 0);
+    UIView* existing = objc_getAssociatedObject(window, kGuaguaPlayerPillKey);
+    if (!need) {
+        if (existing != nil) {
+            [existing removeFromSuperview];
+            objc_setAssociatedObject(window, kGuaguaPlayerPillKey, nil,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+        return;
+    }
+    if (existing != nil) {
+        [window bringSubviewToFront:existing];
+        return;
+    }
+
+    CGFloat width = 232.0;
+    CGFloat height = 46.0;
+    UIControl* pill = GuaguaBuildOurRow(width, height, nil);
+    pill.backgroundColor = [UIColor secondarySystemBackgroundColor];
+    pill.layer.cornerRadius = height / 2.0;
+    pill.layer.shadowColor = [UIColor blackColor].CGColor;
+    pill.layer.shadowOpacity = 0.22;
+    pill.layer.shadowRadius = 10.0;
+    pill.layer.shadowOffset = CGSizeMake(0, 3);
+    pill.frame = CGRectMake(window.bounds.size.width - width - 18.0,
+                            window.bounds.size.height - height - 132.0, width, height);
+    pill.autoresizingMask =
+        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
+    [window addSubview:pill];
+    objc_setAssociatedObject(window, kGuaguaPlayerPillKey, pill,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
 #pragma mark - 诊断转储
 
 static void NFBDumpView(UIView* view, NSInteger depth, NSMutableString* out) {
@@ -711,21 +752,8 @@ static BOOL GuaguaScanWindow(UIWindow* window) {
     }
 
     if (qualityLabel != nil) {
-        // 官方那一行：整行移除（不是改名）
-        if (downloadLabel != nil) {
-            GuaguaRemoveRow(NFBRowContainerForLabel(downloadLabel));
-            NSLog(@"[Guagua] 已移除官方下载行");
-        }
-        // 我们的行：插到面板第一位（「质量」上方）
-        GuaguaInsertOurRowAtTop(window, qualityLabel);
+        // 官方「下载视频」行保留原样；我们的入口用右下角悬浮按钮，不动面板结构
         return YES;
-    }
-
-    // 面板不在了：清掉之前插入的行
-    if (injected != nil) {
-        [injected removeFromSuperview];
-        objc_setAssociatedObject(window, kGuaguaInjectedRowKey, nil,
-                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 
     // ---- 2) 无障碍路径（纯 SwiftUI 面板的兜底）----
@@ -810,6 +838,7 @@ static void GuaguaStartWatch(UIWindow* window) {
                                          return;
                                      }
                                      GuaguaScanWindow(strongWindow);
+                                     GuaguaUpdatePlayerDownloadPill(strongWindow);
                                      hits++;
                                  }];
     objc_setAssociatedObject(window, kGuaguaWatchTimerKey, timer,
@@ -843,6 +872,7 @@ static BOOL NFBClassLooksLikeSheet(NSString* className) {
     }
     if (NFBWindowHasImmersivePlayer(window, 0) || NFBWindowHasSheetClass(window, 0)) {
         GuaguaStartWatch(window);
+        GuaguaUpdatePlayerDownloadPill(window);
     }
 }
 

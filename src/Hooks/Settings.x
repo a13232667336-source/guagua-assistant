@@ -414,187 +414,113 @@ static BOOL NFBSectionsHaveEntry(id vc) {
 
 @end
 
-static void NFBInstallFallbackEntry(UIViewController* vc) {
-    UIView* host = vc.view;
-    if (host == nil || objc_getAssociatedObject(vc, kNFBFallbackEntryKey) != nil) {
+static const void* kNFBBarItemKey = &kNFBBarItemKey;
+static const void* kNFBHostVCKey = &kNFBHostVCKey;
+
+@interface NFBNavEntryProxy : NSObject
++ (instancetype)shared;
+- (void)openSettings:(UIBarButtonItem*)item;
+@end
+
+@implementation NFBNavEntryProxy
++ (instancetype)shared {
+    static NFBNavEntryProxy* proxy;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        proxy = [NFBNavEntryProxy new];
+    });
+    return proxy;
+}
+- (void)openSettings:(UIBarButtonItem*)item {
+    UIViewController* host = objc_getAssociatedObject(item, kNFBHostVCKey);
+    id account = nil;
+    @try {
+        account = [host valueForKey:@"account"];
+    } @catch (__unused NSException* exception) {
+    }
+    UIViewController* settings = [BHTManager BHTSettingsWithAccount:account];
+    if (settings == nil) {
         return;
     }
-
-    CGFloat width = 190.0;
-    CGFloat height = 48.0;
-    NFBFallbackEntryButton* button =
-        [[NFBFallbackEntryButton alloc] initWithFrame:CGRectMake(
-                                                    host.bounds.size.width - width - 18.0,
-                                                    host.bounds.size.height - height - 110.0,
-                                                    width, height)];
-    button.host = vc;
-    button.autoresizingMask =
-        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
-    button.backgroundColor = [UIColor secondarySystemBackgroundColor];
-    button.layer.cornerRadius = height / 2.0;
-    button.layer.shadowColor = [UIColor blackColor].CGColor;
-    button.layer.shadowOpacity = 0.18;
-    button.layer.shadowRadius = 8.0;
-    button.layer.shadowOffset = CGSizeMake(0, 2);
-
-    UIImageView* icon = [[UIImageView alloc]
-        initWithImage:[UIImage systemImageNamed:@"gearshape.fill"
-                                withConfiguration:[UIImageSymbolConfiguration
-                                                      configurationWithPointSize:18.0]]];
-    icon.tintColor = [UIColor labelColor];
-    icon.contentMode = UIViewContentModeScaleAspectFit;
-    icon.frame = CGRectMake(16.0, (height - 20.0) / 2.0, 20.0, 20.0);
-    icon.userInteractionEnabled = NO;
-    [button addSubview:icon];
-
-    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(44.0, 0.0, width - 58.0, height)];
-    NSString* title = [[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"];
-    label.text = title.length ? title : @"NeoFreeBird";
-    label.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
-    label.textColor = [UIColor labelColor];
-    label.userInteractionEnabled = NO;
-    [button addSubview:label];
-
-    [host addSubview:button];
-    objc_setAssociatedObject(vc, kNFBFallbackEntryKey, button,
-                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    NSLog(@"[NFB] 设置页结构不匹配，已挂兜底入口");
+    if (host.navigationController != nil) {
+        [host.navigationController pushViewController:settings animated:YES];
+    } else {
+        UINavigationController* nav =
+            [[UINavigationController alloc] initWithRootViewController:settings];
+        [host presentViewController:nav animated:YES completion:nil];
+    }
 }
+@end
 
-%hook UIViewController
-
-- (void)viewDidAppear:(BOOL)animated {
-    %orig;
-
-    if (!NFBLooksLikeSettingsScreen(self)) {
+// 设置页右上角放一个齿轮按钮：不遮挡内容、不残留到别的界面、观感跟原生一致。
+static void NFBInstallNavBarEntry(UIViewController* vc) {
+    if (vc == nil || objc_getAssociatedObject(vc, kNFBBarItemKey) != nil) {
         return;
     }
-    // 只在设置首页挂兜底入口（子页面不动）
-    UINavigationController* nav = self.navigationController;
-    if (nav != nil && nav.viewControllers.firstObject != self) {
-        return;
+    UIImage* gear = [UIImage systemImageNamed:@"gearshape.fill"];
+    if (gear == nil) {
+        gear = [UIImage systemImageNamed:@"gear"];
     }
-    __weak UIViewController* weakVC = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.6 * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{
-                       UIViewController* vc = weakVC;
-                       if (vc == nil || vc.view.window == nil) {
-                           return;
-                       }
-                       if (NFBSectionsHaveEntry(vc)) {
-                           return;  // 原生插入成功，不用兜底
-                       }
-                       NFBInstallFallbackEntry(vc);
-                   });
+    UIBarButtonItem* item =
+        [[UIBarButtonItem alloc] initWithImage:gear
+                                         style:UIBarButtonItemStylePlain
+                                        target:[NFBNavEntryProxy shared]
+                                        action:@selector(openSettings:)];
+    item.accessibilityLabel = [[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"];
+    objc_setAssociatedObject(item, kNFBHostVCKey, vc, OBJC_ASSOCIATION_ASSIGN);
+
+    UINavigationItem* navItem = vc.navigationItem;
+    NSMutableArray<UIBarButtonItem*>* items =
+        [navItem.rightBarButtonItems mutableCopy] ?: [NSMutableArray array];
+    [items insertObject:item atIndex:0];
+    navItem.rightBarButtonItems = items;
+
+    objc_setAssociatedObject(vc, kNFBBarItemKey, item, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSLog(@"[NFB] 设置页齿轮入口已挂上: %@", NSStringFromClass([vc class]));
 }
 
-%end
-
-// MARK: - 不依赖生命周期的入口安装器 + 载入自检
-
-// 有些类的 viewDidAppear 不调用 super，所以不能只靠 hook 生命周期。
-// 这里用 1 秒一次的轻量轮询：看当前最上层控制器是不是设置页，是就把入口补上。
-
-// 扫所有窗口、所有子控制器/弹出控制器，避免 key window 判断在 Dash 分屏下失准
-static void NFBCollectControllers(UIViewController* vc, NSMutableArray* out) {
-    if (vc == nil || out.count > 60) {
-        return;
-    }
-    [out addObject:vc];
-    for (UIViewController* child in vc.childViewControllers) {
-        NFBCollectControllers(child, out);
-    }
-    NFBCollectControllers(vc.presentedViewController, out);
-}
-
-static NSArray<UIViewController*>* NFBAllControllers(void) {
-    NSMutableArray* out = [NSMutableArray array];
-    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
-        if (![scene isKindOfClass:[UIWindowScene class]]) {
-            continue;
-        }
-        for (UIWindow* window in ((UIWindowScene*)scene).windows) {
-            if (window.hidden || window.alpha < 0.01) {
-                continue;
-            }
-            NFBCollectControllers(window.rootViewController, out);
-        }
-    }
-    return out;
-}
-
-
-// 真正的 X 设置页才挂兜底入口：设置页顶部有「搜索设置」搜索框，
-// 播放器的设置面板没有。之前只按类名/标题判断，把播放器面板也当成设置页了。
-static BOOL NFBViewHasSettingsSearch(UIView* view, NSInteger depth) {
-    if (view == nil || depth > 40) {
+// 只认“真正在屏幕上、叶子级”的设置页；容器控制器 / 播放器面板一律跳过
+static BOOL NFBIsLeafPage(UIViewController* vc) {
+    if (vc.childViewControllers.count > 0) {
         return NO;
     }
-    if ([view isKindOfClass:[UITextField class]]) {
-        NSString* text = ((UITextField*)view).placeholder ?: ((UITextField*)view).text;
-        if ([text containsString:@"搜索"] || [text.lowercaseString containsString:@"search"]) {
-            return YES;
-        }
+    UIWindow* window = vc.view.window;
+    if (window == nil) {
+        return NO;
     }
-    if ([view isKindOfClass:[UISearchBar class]]) {
-        NSString* text = ((UISearchBar*)view).placeholder;
-        if ([text containsString:@"搜索"] || [text.lowercaseString containsString:@"search"]) {
-            return YES;
-        }
+    if (window.rootViewController == vc) {
+        return NO;
     }
-    if ([view isKindOfClass:[UILabel class]]) {
-        NSString* text = ((UILabel*)view).text;
-        if ([text containsString:@"搜索设置"] || [text.lowercaseString containsString:@"search settings"]) {
-            return YES;
-        }
-    }
-    for (UIView* subview in view.subviews) {
-        if (NFBViewHasSettingsSearch(subview, depth + 1)) {
-            return YES;
-        }
-    }
-    return NO;
-}
-
-static BOOL NFBIsRealSettingsPage(UIViewController* vc) {
-    if (vc == nil) {
+    UINavigationController* nav = vc.navigationController;
+    if (nav != nil && nav.topViewController != vc) {
         return NO;
     }
     NSString* name = NSStringFromClass([vc class]);
     if ([name containsString:@"Video"] || [name containsString:@"Player"] ||
-        [name containsString:@"Immersive"] || [name containsString:@"Media"]) {
+        [name containsString:@"Immersive"] || [name containsString:@"Media"] ||
+        [name containsString:@"Sheet"]) {
+        return NO;
+    }
+    return YES;
+}
+
+static BOOL NFBIsSettingsRootPage(UIViewController* vc) {
+    if (!NFBIsLeafPage(vc)) {
         return NO;
     }
     if (!NFBLooksLikeSettingsScreen(vc)) {
         return NO;
     }
+    // 设置页一定有「搜索设置」搜索框；播放器面板没有
     return NFBViewHasSettingsSearch(vc.view, 0);
 }
 
 static void NFBInstallEntryIfNeeded(UIViewController* vc) {
-    if (vc == nil) {
+    if (!NFBIsSettingsRootPage(vc)) {
         return;
     }
-    if (!NFBIsRealSettingsPage(vc)) {
-        return;
-    }
-    if (NFBSectionsHaveEntry(vc)) {
-        return;
-    }
-    // 结构对得上就按原生方式插一行
-    if ([vc isKindOfClass:objc_getClass("TFNItemsDataViewController")]) {
-        @try {
-            insertNeoFreeBirdSettingsIfRoot((TFNItemsDataViewController*)vc);
-        } @catch (__unused NSException* exception) {
-        }
-        if (NFBSectionsHaveEntry(vc)) {
-            return;
-        }
-    }
-    // 插不进去就挂悬浮入口（保证一定有东西可点）
-    NFBInstallFallbackEntry(vc);
+    NFBInstallNavBarEntry(vc);
 }
-
 static void NFBStartEntryWatcher(void) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
