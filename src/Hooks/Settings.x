@@ -320,3 +320,157 @@ static NSString* CustomFontName(BOOL isBold) {
 }
 
 %end
+
+// MARK: - 万能入口兜底（X 12.4x 设置页结构变了也能进）
+
+// 目标：不管设置页是 TFNItemsDataViewController 还是 SwiftUI / 别的类，
+// 都能在 X 的设置界面里找到一个能点进插件设置的入口：
+//   1) 先按原逻辑把条目插进 sections（结构对得上时就是原生那一行）；
+//   2) 0.6 秒后如果发现 sections 里没有我们的条目，就在设置页右下角挂一个
+//      「NeoFreeBird」悬浮按钮，点它直接推我们的设置页。
+
+static const void* kNFBFallbackEntryKey = &kNFBFallbackEntryKey;
+
+static BOOL NFBNameLooksLikeSettings(UIViewController* vc) {
+    NSString* name = NSStringFromClass([vc class]);
+    return [name containsString:@"Setting"] || [name containsString:@"Preferences"];
+}
+
+static BOOL NFBSectionsHaveEntry(id vc) {
+    @try {
+        id sections = [vc valueForKey:@"sections"];
+        if (![sections isKindOfClass:[NSArray class]]) {
+            return NO;
+        }
+        for (id section in (NSArray*)sections) {
+            if (![section isKindOfClass:[NSArray class]]) {
+                continue;
+            }
+            for (id entry in (NSArray*)section) {
+                if (objc_getAssociatedObject(entry, SettingsEntryKey)) {
+                    return YES;
+                }
+            }
+        }
+    } @catch (__unused NSException* exception) {
+    }
+    return NO;
+}
+
+@interface NFBFallbackEntryButton : UIControl
+@property (nonatomic, weak) UIViewController* host;
+@end
+
+@implementation NFBFallbackEntryButton
+
+- (void)endTrackingWithTouch:(UITouch*)touch withEvent:(UIEvent*)event {
+    BOOL inside = self.touchInside;
+    [super endTrackingWithTouch:touch withEvent:event];
+    self.alpha = 1.0;
+    if (inside) {
+        [self nfb_openSettings];
+    }
+}
+
+- (void)beginTrackingWithTouch:(UITouch*)touch withEvent:(UIEvent*)event {
+    [super beginTrackingWithTouch:touch withEvent:event];
+    self.alpha = 0.6;
+    return YES;
+}
+
+- (void)nfb_openSettings {
+    id account = nil;
+    @try {
+        account = [self.host valueForKey:@"account"];
+    } @catch (__unused NSException* exception) {
+    }
+    UIViewController* settings = [BHTManager BHTSettingsWithAccount:account];
+    if (settings == nil) {
+        return;
+    }
+    if (self.host.navigationController != nil) {
+        [self.host.navigationController pushViewController:settings animated:YES];
+    } else {
+        UINavigationController* nav =
+            [[UINavigationController alloc] initWithRootViewController:settings];
+        [self.host presentViewController:nav animated:YES completion:nil];
+    }
+}
+
+@end
+
+static void NFBInstallFallbackEntry(UIViewController* vc) {
+    UIView* host = vc.view;
+    if (host == nil || objc_getAssociatedObject(vc, kNFBFallbackEntryKey) != nil) {
+        return;
+    }
+
+    CGFloat width = 190.0;
+    CGFloat height = 48.0;
+    NFBFallbackEntryButton* button =
+        [[NFBFallbackEntryButton alloc] initWithFrame:CGRectMake(
+                                                    host.bounds.size.width - width - 18.0,
+                                                    host.bounds.size.height - height - 110.0,
+                                                    width, height)];
+    button.host = vc;
+    button.autoresizingMask =
+        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
+    button.backgroundColor = [UIColor secondarySystemBackgroundColor];
+    button.layer.cornerRadius = height / 2.0;
+    button.layer.shadowColor = [UIColor blackColor].CGColor;
+    button.layer.shadowOpacity = 0.18;
+    button.layer.shadowRadius = 8.0;
+    button.layer.shadowOffset = CGSizeMake(0, 2);
+
+    UIImageView* icon = [[UIImageView alloc]
+        initWithImage:[UIImage systemImageNamed:@"gearshape.fill"
+                                withConfiguration:[UIImageSymbolConfiguration
+                                                      configurationWithPointSize:18.0]]];
+    icon.tintColor = [UIColor labelColor];
+    icon.contentMode = UIViewContentModeScaleAspectFit;
+    icon.frame = CGRectMake(16.0, (height - 20.0) / 2.0, 20.0, 20.0);
+    icon.userInteractionEnabled = NO;
+    [button addSubview:icon];
+
+    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(44.0, 0.0, width - 58.0, height)];
+    NSString* title = [[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"];
+    label.text = title.length ? title : @"NeoFreeBird";
+    label.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
+    label.textColor = [UIColor labelColor];
+    label.userInteractionEnabled = NO;
+    [button addSubview:label];
+
+    [host addSubview:button];
+    objc_setAssociatedObject(vc, kNFBFallbackEntryKey, button,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSLog(@"[NFB] 设置页结构不匹配，已挂兜底入口");
+}
+
+%hook UIViewController
+
+- (void)viewDidAppear:(BOOL)animated {
+    %orig;
+
+    if (!NFBNameLooksLikeSettings(self)) {
+        return;
+    }
+    // 只在设置首页挂兜底入口（子页面不动）
+    UINavigationController* nav = self.navigationController;
+    if (nav != nil && nav.viewControllers.firstObject != self) {
+        return;
+    }
+    __weak UIViewController* weakVC = self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.6 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       UIViewController* vc = weakVC;
+                       if (vc == nil || vc.view.window == nil) {
+                           return;
+                       }
+                       if (NFBSectionsHaveEntry(vc)) {
+                           return;  // 原生插入成功，不用兜底
+                       }
+                       NFBInstallFallbackEntry(vc);
+                   });
+}
+
+%end
