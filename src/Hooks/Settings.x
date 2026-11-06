@@ -431,6 +431,26 @@ static const void* kNFBHostVCKey = &kNFBHostVCKey;
     });
     return proxy;
 }
+- (void)openSettingsFromControl:(UIControl*)control {
+    UIViewController* host = objc_getAssociatedObject(control, kNFBHostVCKey);
+    id account = nil;
+    @try {
+        account = [host valueForKey:@"account"];
+    } @catch (__unused NSException* exception) {
+    }
+    UIViewController* settings = [BHTManager BHTSettingsWithAccount:account];
+    if (settings == nil) {
+        return;
+    }
+    if (host.navigationController != nil) {
+        [host.navigationController pushViewController:settings animated:YES];
+    } else {
+        UINavigationController* nav =
+            [[UINavigationController alloc] initWithRootViewController:settings];
+        [host presentViewController:nav animated:YES completion:nil];
+    }
+}
+
 - (void)openSettings:(UIBarButtonItem*)item {
     UIViewController* host = objc_getAssociatedObject(item, kNFBHostVCKey);
     id account = nil;
@@ -453,8 +473,51 @@ static const void* kNFBHostVCKey = &kNFBHostVCKey;
 @end
 
 // 设置页右上角放一个齿轮按钮：不遮挡内容、不残留到别的界面、观感跟原生一致。
+static const void* kNFBGearPillKey = &kNFBGearPillKey;
+
+// 导航栏不可用时的兜底：只在设置页右上角挂一个小圆齿轮（不会出现在播放器里）
+static void NFBInstallGearPill(UIViewController* vc) {
+    if (vc == nil || objc_getAssociatedObject(vc, kNFBGearPillKey) != nil) {
+        return;
+    }
+    CGFloat size = 40.0;
+    UIControl* control = [[UIControl alloc] initWithFrame:CGRectMake(
+        vc.view.bounds.size.width - size - 16.0, 96.0, size, size)];
+    control.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    control.backgroundColor = [UIColor secondarySystemBackgroundColor];
+    control.layer.cornerRadius = size / 2.0;
+    control.layer.shadowColor = [UIColor blackColor].CGColor;
+    control.layer.shadowOpacity = 0.15;
+    control.layer.shadowRadius = 6.0;
+    control.layer.shadowOffset = CGSizeMake(0, 2);
+
+    UIImageView* icon = [[UIImageView alloc]
+        initWithImage:[UIImage systemImageNamed:@"gearshape.fill"
+                                withConfiguration:[UIImageSymbolConfiguration
+                                                      configurationWithPointSize:19.0]]];
+    icon.tintColor = [UIColor labelColor];
+    icon.frame = CGRectMake((size - 20.0) / 2.0, (size - 20.0) / 2.0, 20.0, 20.0);
+    icon.userInteractionEnabled = NO;
+    [control addSubview:icon];
+
+    [control addTarget:[NFBNavEntryProxy shared]
+                action:@selector(openSettingsFromControl:)
+      forControlEvents:UIControlEventTouchUpInside];
+    objc_setAssociatedObject(control, kNFBHostVCKey, vc, OBJC_ASSOCIATION_ASSIGN);
+
+    [vc.view addSubview:control];
+    objc_setAssociatedObject(vc, kNFBGearPillKey, control,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSLog(@"[NFB] 设置页齿轮（无导航栏兜底）已挂上");
+}
+
 static void NFBInstallNavBarEntry(UIViewController* vc) {
     if (vc == nil || objc_getAssociatedObject(vc, kNFBBarItemKey) != nil) {
+        return;
+    }
+    UINavigationController* navForBar = vc.navigationController;
+    if (navForBar == nil || navForBar.isNavigationBarHidden) {
+        NFBInstallGearPill(vc);
         return;
     }
     UIImage* gear = [UIImage systemImageNamed:@"gearshape.fill"];
