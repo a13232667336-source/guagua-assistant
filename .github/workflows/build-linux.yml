@@ -23,7 +23,7 @@ jobs:
       - name: deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y git make clang lld libplist-utils zip unzip curl xz-utils perl
+          sudo apt-get install -y git make clang lld llvm libplist-utils zip unzip curl xz-utils perl
 
       - name: theos
         run: |
@@ -35,7 +35,7 @@ jobs:
           ln -sf "$(command -v clang)" "$TC/clang"
           ln -sf "$(command -v clang++)" "$TC/clang++"
           ln -sf "$(command -v llvm-ar || command -v ar)" "$TC/ar"
-          ln -sf "$(command -v llvm-ranlib || command -v ranlib)" "$TC/ranlib"
+          ln -sf "$(command -v llvm-ranlib || command -v llvm-ranlib-14 || command -v llvm-ranlib-15 || command -v ranlib)" "$TC/ranlib"
           ln -sf "$(command -v llvm-nm || command -v nm)" "$TC/nm"
           ls -l "$TC"
 
