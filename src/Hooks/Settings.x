@@ -523,11 +523,59 @@ static NSArray<UIViewController*>* NFBAllControllers(void) {
     return out;
 }
 
+
+// 真正的 X 设置页才挂兜底入口：设置页顶部有「搜索设置」搜索框，
+// 播放器的设置面板没有。之前只按类名/标题判断，把播放器面板也当成设置页了。
+static BOOL NFBViewHasSettingsSearch(UIView* view, NSInteger depth) {
+    if (view == nil || depth > 40) {
+        return NO;
+    }
+    if ([view isKindOfClass:[UITextField class]]) {
+        NSString* text = ((UITextField*)view).placeholder ?: ((UITextField*)view).text;
+        if ([text containsString:@"搜索"] || [text.lowercaseString containsString:@"search"]) {
+            return YES;
+        }
+    }
+    if ([view isKindOfClass:[UISearchBar class]]) {
+        NSString* text = ((UISearchBar*)view).placeholder;
+        if ([text containsString:@"搜索"] || [text.lowercaseString containsString:@"search"]) {
+            return YES;
+        }
+    }
+    if ([view isKindOfClass:[UILabel class]]) {
+        NSString* text = ((UILabel*)view).text;
+        if ([text containsString:@"搜索设置"] || [text.lowercaseString containsString:@"search settings"]) {
+            return YES;
+        }
+    }
+    for (UIView* subview in view.subviews) {
+        if (NFBViewHasSettingsSearch(subview, depth + 1)) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static BOOL NFBIsRealSettingsPage(UIViewController* vc) {
+    if (vc == nil) {
+        return NO;
+    }
+    NSString* name = NSStringFromClass([vc class]);
+    if ([name containsString:@"Video"] || [name containsString:@"Player"] ||
+        [name containsString:@"Immersive"] || [name containsString:@"Media"]) {
+        return NO;
+    }
+    if (!NFBLooksLikeSettingsScreen(vc)) {
+        return NO;
+    }
+    return NFBViewHasSettingsSearch(vc.view, 0);
+}
+
 static void NFBInstallEntryIfNeeded(UIViewController* vc) {
     if (vc == nil) {
         return;
     }
-    if (!NFBLooksLikeSettingsScreen(vc)) {
+    if (!NFBIsRealSettingsPage(vc)) {
         return;
     }
     if (NFBSectionsHaveEntry(vc)) {

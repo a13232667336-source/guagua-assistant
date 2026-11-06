@@ -13,6 +13,60 @@
 #import "Settings/ModernSettingsViewController.h"
 
 @implementation BHTManager
+
++ (void)downloadVideoFromURL:(NSURL*)url {
+    if (url == nil || url.absoluteString.length == 0) {
+        return;
+    }
+    NSString* downloadingText = @"正在下载…";
+    TFNHUD* hud = [[objc_getClass("TFNHUD") alloc] initWithText:downloadingText];
+    [hud show];
+
+    NSString* source = url.absoluteString;
+    BOOL isGIF = [url.pathExtension.lowercaseString isEqualToString:@"gif"];
+    NSString* ext = isGIF ? @"gif" : @"mp4";
+    NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
+        URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@", NSUUID.UUID.UUIDString, ext]];
+    NSString* args = isGIF
+        ? [NSString stringWithFormat:@"-y -i %@ -an -vf split[a][b];[a]palettegen[p];[b][p]paletteuse", source]
+        : [NSString stringWithFormat:@"-y -i %@ -c copy -movflags +faststart", source];
+
+    [FFmpegKit executeAsync:[NSString stringWithFormat:@"%@ %@", args, outFile.path]
+        withCompleteCallback:^(FFmpegSession* session) {
+            ReturnCode* returnCode = [session getReturnCode];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [hud hide];
+                if (![ReturnCode isSuccess:returnCode]) {
+                    UIAlertController* alert = [UIAlertController
+                        alertControllerWithTitle:@"下载失败"
+                                         message:[NSString stringWithFormat:@"FFmpeg: %@",
+                                                                            [session getFailStackTrace] ?: @""]
+                                  preferredStyle:UIAlertControllerStyleAlert];
+                    [alert addAction:[UIAlertAction actionWithTitle:@"好" style:UIAlertActionStyleDefault handler:nil]];
+                    [topMostController() presentViewController:alert animated:YES completion:nil];
+                    return;
+                }
+                if (isGIF) {
+                    [BHTManager saveGIF:outFile];
+                } else {
+                    [BHTManager save:outFile];
+                }
+            });
+        }
+        withLogCallback:nil
+        withStatisticsCallback:^(Statistics* statistics) {
+            if ([statistics getSize] <= 0) {
+                return;
+            }
+            NSString* detail = [NSByteCountFormatter stringFromByteCount:[statistics getSize]
+                                                             countStyle:NSByteCountFormatterCountStyleFile];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [hud setText:[NSString stringWithFormat:@"%@ %@", downloadingText, detail]];
+            });
+        }];
+}
+
+
 + (void)cleanCache {
     NSArray<NSURL*>* DocumentFiles = [[NSFileManager defaultManager]
           contentsOfDirectoryAtURL:

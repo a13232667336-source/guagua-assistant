@@ -17,6 +17,8 @@
 + (void)showSaveVC:(NSURL*)url;
 + (void)save:(NSURL*)url;
 + (void)saveGIF:(NSURL*)url;
+// 用插件自己的 FFmpeg 通道按地址下载（播放器里“下载视频（呱呱助手）”）
++ (void)downloadVideoFromURL:(NSURL*)url;
 + (MediaInformation*)getM3U8Information:(NSURL*)mediaURL;
 + (NSString*)getDownloadingPercent:(float)progress;
 
