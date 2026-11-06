@@ -331,6 +331,8 @@ static NSString* CustomFontName(BOOL isBold) {
 
 static const void* kNFBFallbackEntryKey = &kNFBFallbackEntryKey;
 
+static BOOL NFBNameLooksLikeSettings(UIViewController* vc);
+
 static BOOL NFBLooksLikeSettingsScreen(UIViewController* vc) {
     if (NFBNameLooksLikeSettings(vc)) {
         return YES;
