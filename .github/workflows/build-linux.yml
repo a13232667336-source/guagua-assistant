@@ -27,11 +27,16 @@ jobs:
       - name: theos
         run: |
           git clone --recursive --depth 1 https://github.com/theos/theos "$THEOS"
-          mkdir -p "$THEOS/toolchain"
-          curl -fL --retry 3 -o /tmp/tc.tar.xz \
-            https://github.com/theos/toolchain/releases/latest/download/linux-x86_64.tar.xz
-          tar -xJf /tmp/tc.tar.xz -C "$THEOS/toolchain"
-          ls "$THEOS/toolchain"
+          # Linux 上没有独立的 procursus 工具链：把系统 clang / llvm 工具链软链到
+          # build-ffmpeg.sh 期望的 $THEOS/toolchain/linux/iphone/bin 位置
+          TC="$THEOS/toolchain/linux/iphone/bin"
+          mkdir -p "$TC"
+          ln -sf "$(command -v clang)" "$TC/clang"
+          ln -sf "$(command -v clang++)" "$TC/clang++"
+          ln -sf "$(command -v llvm-ar || command -v ar)" "$TC/ar"
+          ln -sf "$(command -v llvm-ranlib || command -v ranlib)" "$TC/ranlib"
+          ln -sf "$(command -v llvm-nm || command -v nm)" "$TC/nm"
+          ls -l "$TC"
 
       - name: sdk
         run: |
