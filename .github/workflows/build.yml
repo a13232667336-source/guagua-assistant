@@ -6,7 +6,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-13
     env:
       THEOS: ${{ github.workspace }}/theos
       BUILD_DIR: ${{ github.workspace }}/ffmpeg-build
