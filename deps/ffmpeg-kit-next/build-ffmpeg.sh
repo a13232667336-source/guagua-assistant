@@ -92,8 +92,9 @@ if [[ ! -f "$OPENSSL_PREFIX/lib/libssl.a" ]]; then
         --prefix="$OPENSSL_PREFIX" \
         -mios-version-min=14.0
 
-    make -j"$JOBS"
-    make install_sw
+    # 只编静态库和头文件，不建 apps/（交叉环境下链接 CLI 会炸）
+    make -j"$JOBS" build_libs
+    make install_dev
 
     popd
 fi
