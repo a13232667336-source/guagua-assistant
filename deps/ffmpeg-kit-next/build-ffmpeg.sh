@@ -95,6 +95,10 @@ if [[ ! -f "$OPENSSL_PREFIX/lib/libssl.a" ]]; then
     # 只编静态库和头文件，不建 apps/（交叉环境下链接 CLI 会炸）
     make -j"$JOBS" build_libs
     make install_dev
+    # GNU ar 生成的索引 ld64.lld 读不了，用 llvm-ranlib 重建
+    for _a in "$OPENSSL_PREFIX"/lib/*.a; do
+        "$RANLIB_BIN" "$_a" || true
+    done
 
     popd
 fi
