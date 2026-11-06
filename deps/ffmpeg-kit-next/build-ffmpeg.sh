@@ -103,6 +103,11 @@ if [[ ! -f "$OPENSSL_PREFIX/lib/libssl.a" ]]; then
     popd
 fi
 
+# 缓存里恢复的 OpenSSL 归档可能没有 ld64.lld 认识的索引：每次收敛一遍
+for _a in "$OPENSSL_PREFIX"/lib/*.a; do
+    "$RANLIB_BIN" "$_a" 2>/dev/null || true
+done
+
 # --- FFmpeg ----------------------------------------------------------------
 
 FFMPEG_SRC="$BUILD/FFmpeg-$FFMPEG_TAG"
