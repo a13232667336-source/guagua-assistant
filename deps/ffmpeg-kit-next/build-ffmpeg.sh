@@ -44,14 +44,20 @@ fi
 
 mkdir -p "$BUILD/bin"
 
+# Linux 上用 lld 的 Mach-O 链接器（ld64.lld）
+EXTRA_LD_FLAGS=""
+if [[ "$(uname)" != "Darwin" ]]; then
+    EXTRA_LD_FLAGS="-fuse-ld=lld"
+fi
+
 # Wrapper compilers so build systems that mangle multi-word CC still work.
 cat > "$BUILD/bin/ios-clang" <<EOF
 #!/usr/bin/env bash
-exec "$CC_BIN" -target arm64-apple-ios$MIN_IOS -isysroot "$SDK" -miphoneos-version-min=$MIN_IOS "\$@"
+exec "$CC_BIN" -target arm64-apple-ios$MIN_IOS -isysroot "$SDK" -miphoneos-version-min=$MIN_IOS $EXTRA_LD_FLAGS "\$@"
 EOF
 cat > "$BUILD/bin/ios-clang++" <<EOF
 #!/usr/bin/env bash
-exec "$CXX_BIN" -target arm64-apple-ios$MIN_IOS -isysroot "$SDK" -miphoneos-version-min=$MIN_IOS "\$@"
+exec "$CXX_BIN" -target arm64-apple-ios$MIN_IOS -isysroot "$SDK" -miphoneos-version-min=$MIN_IOS $EXTRA_LD_FLAGS "\$@"
 EOF
 chmod +x "$BUILD/bin/ios-clang" "$BUILD/bin/ios-clang++"
 
