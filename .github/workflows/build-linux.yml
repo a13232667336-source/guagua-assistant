@@ -37,6 +37,8 @@ jobs:
           ln -sf "$(command -v llvm-ar || command -v ar)" "$TC/ar"
           ln -sf "$(command -v llvm-ranlib || command -v llvm-ranlib-14 || command -v llvm-ranlib-15 || command -v ranlib)" "$TC/ranlib"
           ln -sf "$(command -v llvm-nm || command -v nm)" "$TC/nm"
+          ln -sf "$(command -v llvm-strip || command -v strip)" "$TC/strip"
+          ln -sf "$(command -v llvm-objcopy || command -v objcopy)" "$TC/objcopy"
           ls -l "$TC"
 
       - name: sdk
