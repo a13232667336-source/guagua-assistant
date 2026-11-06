@@ -2,17 +2,11 @@ name: build-nfb-7.1.0
 
 # 上游 NeoFreeBird v7.1.0 原版，只出 dylib / deb（不编 IPA、不依赖额外子模块）
 
-on:
-  push:
-  workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
     env:
       THEOS: ${{ github.workspace }}/theos
       BUILD_DIR: ${{ github.workspace }}/ffmpeg-build
