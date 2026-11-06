@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       THEOS: ${{ github.workspace }}/theos
+      BUILD_DIR: ${{ github.workspace }}/fb
 
     steps:
       - name: checkout
@@ -68,6 +69,12 @@ jobs:
           fi
           sed -i -e 's/\r$//' deps/ffmpeg-kit-next/build-ffmpeg.sh
           bash deps/ffmpeg-kit-next/build-ffmpeg.sh
+
+      - name: dump ffmpeg config log
+        if: failure()
+        run: |
+          ls -d "$BUILD_DIR"/FFmpeg-* 2>/dev/null || true
+          tail -n 120 "$BUILD_DIR"/FFmpeg-*/ffbuild/config.log 2>/dev/null || true
 
       - name: build tweak
         run: |
