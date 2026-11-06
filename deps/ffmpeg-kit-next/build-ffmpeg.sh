@@ -87,6 +87,7 @@ if [[ ! -f "$OPENSSL_PREFIX/lib/libssl.a" ]]; then
 
     ./Configure ios64-xcrun "${OPENSSL_EXTRA[@]}" \
         no-shared \
+        no-module \
         no-tests \
         --prefix="$OPENSSL_PREFIX" \
         -mios-version-min=14.0
