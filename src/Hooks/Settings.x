@@ -331,6 +331,19 @@ static NSString* CustomFontName(BOOL isBold) {
 
 static const void* kNFBFallbackEntryKey = &kNFBFallbackEntryKey;
 
+static BOOL NFBLooksLikeSettingsScreen(UIViewController* vc) {
+    if (NFBNameLooksLikeSettings(vc)) {
+        return YES;
+    }
+    NSString* title = vc.navigationItem.title;
+    if (![title isKindOfClass:[NSString class]]) {
+        return NO;
+    }
+    NSString* lower = title.lowercaseString;
+    return [title containsString:@"\u8bbe\u7f6e"] || [lower containsString:@"settings"] ||
+           [lower containsString:@"preferences"];
+}
+
 static BOOL NFBNameLooksLikeSettings(UIViewController* vc) {
     NSString* name = NSStringFromClass([vc class]);
     return [name containsString:@"Setting"] || [name containsString:@"Preferences"];
@@ -451,7 +464,7 @@ static void NFBInstallFallbackEntry(UIViewController* vc) {
 - (void)viewDidAppear:(BOOL)animated {
     %orig;
 
-    if (!NFBNameLooksLikeSettings(self)) {
+    if (!NFBLooksLikeSettingsScreen(self)) {
         return;
     }
     // 只在设置首页挂兜底入口（子页面不动）
