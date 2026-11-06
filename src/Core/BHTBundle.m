@@ -6,6 +6,7 @@
 //
 
 #import "BHTBundle.h"
+#import "Core/NFBEmbedded.h"
 
 @interface BHTBundle ()
 @property (nonatomic, strong) NSBundle* mainBundle;
@@ -46,7 +47,13 @@
 }
 
 - (NSString*)localizedStringForKey:(NSString*)key {
-    return [self.mainBundle localizedStringForKey:key value:key table:nil];
+    NSString* value = [self.mainBundle localizedStringForKey:key value:nil table:nil];
+    if (value.length > 0) {
+        return value;
+    }
+    // 资源包缺失时用编译进二进制的字符串表兜底，避免这里返回 nil 导致设置入口标题为空
+    NSString* embedded = NFBEmbeddedString(key);
+    return embedded.length ? embedded : key;
 }
 
 // Fetches one of Twitter's own strings, reusing the app's translations for
