@@ -332,7 +332,6 @@ static void GuaguaTakeOverRow(UILabel* label, UIView* row) {
 
 #pragma mark - 官方行整行移除 + 我们的行插到面板第一行
 
-static const void* kGuaguaInjectedRowKey = &kGuaguaInjectedRowKey;
 
 static UIControl* GuaguaBuildOurRow(CGFloat width, CGFloat height, UILabel* anchor) {
     UIControl* row = [[UIControl alloc] initWithFrame:CGRectMake(0, 0, width, height)];
@@ -381,18 +380,7 @@ static UIControl* GuaguaBuildOurRow(CGFloat width, CGFloat height, UILabel* anch
 }
 
 // 官方那一行整行拿掉：从 stack 的 arrangedSubviews 里摘掉，再从视图树移除。
-static void GuaguaRemoveRow(UIView* row) {
-    if (row == nil) {
-        return;
-    }
-    UIView* parent = row.superview;
-    if ([parent isKindOfClass:[UIStackView class]]) {
-        [(UIStackView*)parent removeArrangedSubview:row];
-    }
-    row.hidden = YES;
-    row.alpha = 0.0;
-    [row removeFromSuperview];
-}
+
 
 // 往上找最近的 UIStackView（X 每行外面常再包一层，直接父视图不一定是 stack）。
 static UIStackView* GuaguaNearestStack(UIView* view, UIView** outChild) {
@@ -410,56 +398,7 @@ static UIStackView* GuaguaNearestStack(UIView* view, UIView** outChild) {
 }
 
 // 把我们的行插到面板「第一行」——也就是「质量」那一行的上面。
-static void GuaguaInsertOurRowAtTop(UIWindow* window, UILabel* topAnchor) {
-    if (window == nil || topAnchor == nil) {
-        return;
-    }
-    if (objc_getAssociatedObject(window, kGuaguaInjectedRowKey) != nil) {
-        return;
-    }
 
-    UIView* anchorRow = NFBRowContainerForLabel(topAnchor);
-    if (anchorRow == nil) {
-        return;
-    }
-
-    CGFloat height = anchorRow.bounds.size.height;
-    if (height < 20.0 || height > 120.0) {
-        height = 44.0;
-    }
-
-    UIView* child = anchorRow;
-    UIStackView* stack = GuaguaNearestStack(anchorRow, &child);
-
-    if (stack != nil) {
-        NSUInteger index = [stack.arrangedSubviews indexOfObject:child];
-        if (index == NSNotFound) {
-            index = 0;
-        }
-        CGFloat width = child.bounds.size.width > 40.0 ? child.bounds.size.width
-                                                       : stack.bounds.size.width;
-        UIControl* row = GuaguaBuildOurRow(width, height, topAnchor);
-        [stack insertArrangedSubview:row atIndex:index];
-        objc_setAssociatedObject(window, kGuaguaInjectedRowKey, row,
-                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        NSLog(@"[Guagua] 下载行已插入面板第一位");
-        return;
-    }
-
-    // 面板不是 stack 布局时的兜底：窗口里挂一个悬浮入口，保证能下载
-    CGFloat width = 210.0;
-    UIControl* pill = GuaguaBuildOurRow(width, 44.0, topAnchor);
-    pill.backgroundColor = [UIColor secondarySystemBackgroundColor];
-    pill.layer.cornerRadius = 22.0;
-    pill.frame = CGRectMake(window.bounds.size.width - width - 20.0,
-                            window.bounds.size.height - 170.0, width, 44.0);
-    pill.autoresizingMask =
-        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
-    [window addSubview:pill];
-    objc_setAssociatedObject(window, kGuaguaInjectedRowKey, pill,
-                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    NSLog(@"[Guagua] 面板非 stack 布局，改用悬浮入口");
-}
 
 #pragma mark - 方案 B：无障碍树（SwiftUI 的 Text 走这里）
 
