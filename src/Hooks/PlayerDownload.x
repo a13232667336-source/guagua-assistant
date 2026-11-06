@@ -577,103 +577,57 @@ static UIView* GuaguaBuildAccessibilityRow(UIWindow* window, CGRect screenRect) 
     return container;
 }
 
-#pragma mark - 播放器里的悬浮下载按钮（官方行保持不动）
+#pragma mark - 往播放器面板里插一行「下载视频（呱呱助手）」
 
+static const void* kGuaguaInjectedRowKey = &kGuaguaInjectedRowKey;
 
-// 最上层控制器是不是沉浸式播放器（时间线、帖子详情都不算）
-static BOOL NFBTopIsImmersivePlayer(void) {
-    UIWindow* window = nil;
-    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
-        if (![scene isKindOfClass:[UIWindowScene class]]) {
-            continue;
+// 把我们的行插到锚点行（添加到离线 / 前往帖子）的上面，尺寸与锚点行一致
+static BOOL GuaguaInsertRowAboveAnchor(UILabel* anchorLabel) {
+    if (anchorLabel == nil) {
+        return NO;
+    }
+    UIView* anchorRow = NFBRowContainerForLabel(anchorLabel);
+    UIView* parent = anchorRow.superview;
+    if (parent == nil) {
+        return NO;
+    }
+
+    CGFloat height = anchorRow.bounds.size.height;
+    if (height < 24.0 || height > 110.0) {
+        height = 44.0;
+    }
+    CGFloat width = anchorRow.bounds.size.width > 40.0 ? anchorRow.bounds.size.width
+                                                       : parent.bounds.size.width;
+    UIControl* row = GuaguaBuildOurRow(width, height, anchorLabel);
+
+    if ([parent isKindOfClass:[UIStackView class]]) {
+        UIStackView* stack = (UIStackView*)parent;
+        NSUInteger index = [stack.arrangedSubviews indexOfObject:anchorRow];
+        if (index == NSNotFound) {
+            index = stack.arrangedSubviews.count;
         }
-        for (UIWindow* candidate in ((UIWindowScene*)scene).windows) {
-            if (!candidate.hidden && candidate.alpha > 0.01 && candidate.isKeyWindow) {
-                window = candidate;
-                break;
+        row.translatesAutoresizingMaskIntoConstraints = NO;
+        [stack insertArrangedSubview:row atIndex:index];
+        [row.heightAnchor constraintEqualToConstant:height].active = YES;
+        [row.widthAnchor constraintEqualToConstant:width].active = YES;
+    } else {
+        row.frame = anchorRow.frame;
+        [parent addSubview:row];
+        for (UIView* sibling in parent.subviews) {
+            if (sibling == row) {
+                continue;
+            }
+            if (sibling.frame.origin.y >= anchorRow.frame.origin.y - 0.5) {
+                CGRect frame = sibling.frame;
+                frame.origin.y += height;
+                sibling.frame = frame;
             }
         }
-        if (window != nil) {
-            break;
-        }
     }
-    if (window == nil) {
-        return NO;
-    }
-    UIViewController* vc = window.rootViewController;
-    for (NSInteger i = 0; i < 8 && vc != nil; i++) {
-        if ([vc isKindOfClass:[UINavigationController class]]) {
-            vc = ((UINavigationController*)vc).visibleViewController;
-            continue;
-        }
-        if ([vc isKindOfClass:[UITabBarController class]]) {
-            vc = ((UITabBarController*)vc).selectedViewController;
-            continue;
-        }
-        UIViewController* presented = vc.presentedViewController;
-        if (presented != nil) {
-            vc = presented;
-            continue;
-        }
-        break;
-    }
-    if (vc == nil) {
-        return NO;
-    }
-    NSString* name = NSStringFromClass([vc class]);
-    return [name containsString:@"Immersive"] || [name isEqualToString:@"T1ImmersiveViewController"] ||
-           [name isEqualToString:@"T1ImmersiveViewControllerV2"];
-}
-
-// 播放器设置面板是否已经打开（打开时收起胶囊，避免盖住面板）
-static BOOL NFBPlayerPanelIsOpen(UIWindow* window) {
-    NSMutableArray<UILabel*>* labels = [NSMutableArray array];
-    NFBCollectLabels(window, labels, 0);
-    for (UILabel* label in labels) {
-        if ([NFBQualityRowTitles() containsObject:NFBTrimmedLowercase(NFBLabelText(label))]) {
-            return YES;
-        }
-    }
-    return NO;
-}
-
-static const void* kGuaguaPlayerPillKey = &kGuaguaPlayerPillKey;
-
-static void GuaguaUpdatePlayerDownloadPill(UIWindow* window) {
-    if (window == nil) {
-        return;
-    }
-    BOOL need = NFBTopIsImmersivePlayer() && !NFBPlayerPanelIsOpen(window);
-    UIView* existing = objc_getAssociatedObject(window, kGuaguaPlayerPillKey);
-    if (!need) {
-        if (existing != nil) {
-            [existing removeFromSuperview];
-            objc_setAssociatedObject(window, kGuaguaPlayerPillKey, nil,
-                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        }
-        return;
-    }
-    if (existing != nil) {
-        [window bringSubviewToFront:existing];
-        return;
-    }
-
-    CGFloat width = 232.0;
-    CGFloat height = 46.0;
-    UIControl* pill = GuaguaBuildOurRow(width, height, nil);
-    pill.backgroundColor = [UIColor secondarySystemBackgroundColor];
-    pill.layer.cornerRadius = height / 2.0;
-    pill.layer.shadowColor = [UIColor blackColor].CGColor;
-    pill.layer.shadowOpacity = 0.22;
-    pill.layer.shadowRadius = 10.0;
-    pill.layer.shadowOffset = CGSizeMake(0, 3);
-    pill.frame = CGRectMake(window.bounds.size.width - width - 18.0,
-                            window.bounds.size.height - height - 132.0, width, height);
-    pill.autoresizingMask =
-        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
-    [window addSubview:pill];
-    objc_setAssociatedObject(window, kGuaguaPlayerPillKey, pill,
+    objc_setAssociatedObject(parent, kGuaguaInjectedRowKey, row,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSLog(@"[Guagua] 已在面板插入下载行");
+    return YES;
 }
 
 #pragma mark - 诊断转储
@@ -810,7 +764,35 @@ static BOOL GuaguaScanWindow(UIWindow* window) {
     }
 
     if (qualityLabel != nil) {
-        // 官方「下载视频」行保留原样；我们的入口用右下角悬浮按钮，不动面板结构
+        // 官方行不动；在「添加到离线 / 前往帖子」那一行上方插入我们的行
+        if (objc_getAssociatedObject(window, kGuaguaInjectedRowKey) == nil) {
+            UILabel* anchor = nil;
+            for (UILabel* label in labels) {
+                if (injected != nil && [label isDescendantOfView:injected]) {
+                    continue;
+                }
+                NSString* normalized = NFBTrimmedLowercase(NFBLabelText(label));
+                if (normalized.length == 0) {
+                    continue;
+                }
+                if ([NFBOfflineRowTitles() containsObject:normalized]) {
+                    anchor = label;
+                    break;
+                }
+            }
+            if (anchor == nil) {
+                for (UILabel* label in labels) {
+                    NSString* normalized = NFBTrimmedLowercase(NFBLabelText(label));
+                    if ([NFBViewPostRowTitles() containsObject:normalized]) {
+                        anchor = label;
+                        break;
+                    }
+                }
+            }
+            if (anchor != nil) {
+                GuaguaInsertRowAboveAnchor(anchor);
+            }
+        }
         return YES;
     }
 
@@ -896,7 +878,6 @@ static void GuaguaStartWatch(UIWindow* window) {
                                          return;
                                      }
                                      GuaguaScanWindow(strongWindow);
-                                     GuaguaUpdatePlayerDownloadPill(strongWindow);
                                      hits++;
                                  }];
     objc_setAssociatedObject(window, kGuaguaWatchTimerKey, timer,
@@ -928,7 +909,6 @@ static BOOL NFBClassLooksLikeSheet(NSString* className) {
     if (window == nil) {
         return;
     }
-    GuaguaUpdatePlayerDownloadPill(window);
     if (NFBWindowHasImmersivePlayer(window, 0) || NFBWindowHasSheetClass(window, 0)) {
         GuaguaStartWatch(window);
     }

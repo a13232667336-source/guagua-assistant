@@ -520,6 +520,8 @@ static void NFBInstallNavBarEntry(UIViewController* vc) {
         NFBInstallGearPill(vc);
         return;
     }
+    // 导航栏存在但可能是自绘的：齿轮 + 兜底小圆按钮都挂，保证一定看得见
+    NFBInstallGearPill(vc);
     UIImage* gear = [UIImage systemImageNamed:@"gearshape.fill"];
     if (gear == nil) {
         gear = [UIImage systemImageNamed:@"gear"];
@@ -631,15 +633,14 @@ static BOOL NFBIsSettingsRootPage(UIViewController* vc) {
         return NO;
     }
     NSString* name = NSStringFromClass([vc class]);
-    // 播放器的设置面板类名里也带 Settings，必须排除掉
+    // 播放器面板类名里也带 Settings，必须排除
     if ([name containsString:@"Video"] || [name containsString:@"Player"] ||
         [name containsString:@"Immersive"] || [name containsString:@"Media"] ||
         [name containsString:@"Sheet"] || [name containsString:@"Broadcast"]) {
         return NO;
     }
     UINavigationController* nav = vc.navigationController;
-    BOOL isFirstPage = (nav == nil || nav.viewControllers.firstObject == vc);
-    if (!isFirstPage) {
+    if (nav != nil && nav.viewControllers.firstObject != vc) {
         return NO;
     }
     if ([name containsString:@"Setting"] || [name containsString:@"Preference"]) {
