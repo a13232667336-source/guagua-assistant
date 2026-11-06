@@ -73,7 +73,13 @@ if [[ ! -f "$OPENSSL_PREFIX/lib/libssl.a" ]]; then
 
     export IPHONEOS_DEPLOYMENT_TARGET=14.0
 
-    ./Configure ios64-xcrun \
+    # Linux 上没有 xcrun：直接把交叉编译器的包装脚本传给 OpenSSL
+    OPENSSL_EXTRA=()
+    if [[ "$(uname)" != "Darwin" ]]; then
+        OPENSSL_EXTRA=(CC="$BUILD/bin/ios-clang" CXX="$BUILD/bin/ios-clang++" AR="$AR_BIN" RANLIB="$RANLIB_BIN")
+    fi
+
+    ./Configure ios64-xcrun "${OPENSSL_EXTRA[@]}" \
         no-shared \
         no-tests \
         --prefix="$OPENSSL_PREFIX" \
