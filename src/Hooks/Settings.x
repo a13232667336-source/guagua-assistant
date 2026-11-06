@@ -372,7 +372,7 @@ static BOOL NFBSectionsHaveEntry(id vc) {
     }
 }
 
-- (void)beginTrackingWithTouch:(UITouch*)touch withEvent:(UIEvent*)event {
+- (BOOL)beginTrackingWithTouch:(UITouch*)touch withEvent:(UIEvent*)event {
     [super beginTrackingWithTouch:touch withEvent:event];
     self.alpha = 0.6;
     return YES;
