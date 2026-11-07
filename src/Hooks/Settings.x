@@ -636,6 +636,9 @@ static void NFBInstallEntryIfNeeded(UIViewController* vc) {
 }
 static void NFBInstallSideMenuEntry(UIViewController* vc);
 static void NFBInstallFloatingEntry(void);
+static void NFBUpdateFloatingVisibility(void);
+static void NFBInstallGlobalGesture(void);
+
 
 
 static void NFBStartEntryWatcher(void) {
@@ -649,7 +652,8 @@ static void NFBStartEntryWatcher(void) {
                                              UIApplicationStateActive) {
                                              return;
                                          }
-                                         NFBInstallFloatingEntry();
+                                         NFBInstallGlobalGesture();
+                                         NFBUpdateFloatingVisibility();
                                          for (UIViewController* vc in NFBAllControllers()) {
                                              NFBInstallEntryIfNeeded(vc);
                                              NFBInstallSideMenuEntry(vc);
@@ -943,11 +947,179 @@ static void NFBInstallFloatingEntry(void) {
 }
 
 
+
+// MARK: - 只在“设置类界面”显示悬浮入口 + 三指双击兜底
+
+static BOOL NFBAXLabelHit(id element, NSArray<NSString*>* needles) {
+    @try {
+        if ([element respondsToSelector:@selector(accessibilityLabel)]) {
+            id label = [element accessibilityLabel];
+            if ([label isKindOfClass:[NSString class]]) {
+                for (NSString* needle in needles) {
+                    if ([(NSString*)label containsString:needle]) {
+                        return YES;
+                    }
+                }
+            }
+        }
+    } @catch (__unused NSException* exception) {
+    }
+    return NO;
+}
+
+static void NFBCollectAX(id container, NSMutableArray* out, NSInteger depth) {
+    if (container == nil || depth > 26 || out.count > 1200) {
+        return;
+    }
+    if ([container respondsToSelector:@selector(accessibilityElementCount)]) {
+        NSInteger count = [container accessibilityElementCount];
+        if (count > 0 && count < 3000) {
+            for (NSInteger i = 0; i < count; i++) {
+                id element = [container accessibilityElementAtIndex:i];
+                if (element != nil) {
+                    [out addObject:element];
+                }
+            }
+        }
+    }
+    if ([container respondsToSelector:@selector(accessibilityElements)]) {
+        @try {
+            id elements = [container accessibilityElements];
+            if ([elements isKindOfClass:[NSArray class]]) {
+                [out addObjectsFromArray:elements];
+            }
+        } @catch (__unused NSException* exception) {
+        }
+    }
+    if ([container isKindOfClass:[UIView class]]) {
+        for (UIView* subview in ((UIView*)container).subviews) {
+            NFBCollectAX(subview, out, depth + 1);
+        }
+    }
+}
+
+// 12.4x 的设置/侧边栏都是 SwiftUI 自绘，控件层拿不到文字；
+// 但无障碍树里有文案，用它的关键词判断“当前是不是设置类界面”。
+static BOOL NFBIsSettingsLikeScreen(UIWindow* window) {
+    if (window == nil) {
+        return NO;
+    }
+    NSArray<NSString*>* needles = @[
+        @"设置和隐私", @"设置与隐私", @"Settings and privacy",
+        @"帮助中心", @"Help Center",
+        @"安全和访问", @"Safety", @"隐私和安全", @"Privacy and safety",
+        @"搜索设置", @"Search settings",
+    ];
+    NSMutableArray* elements = [NSMutableArray array];
+    NFBCollectAX(window, elements, 0);
+    for (id element in elements) {
+        if (NFBAXLabelHit(element, needles)) {
+            return YES;
+        }
+    }
+    // 控件层再兜一次（老版本 X / 部分页面是 UIKit）
+    return NFBViewHasSettingsSearch(window, 0);
+}
+
+static void NFBUpdateFloatingVisibility(void) {
+    UIWindow* window = nil;
+    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) {
+            continue;
+        }
+        for (UIWindow* candidate in ((UIWindowScene*)scene).windows) {
+            if (!candidate.hidden && candidate.isKeyWindow) {
+                window = candidate;
+                break;
+            }
+        }
+        if (window != nil) {
+            break;
+        }
+    }
+    if (window == nil) {
+        return;
+    }
+    UIView* entry = objc_getAssociatedObject(window, kNFBFloatingKey);
+    BOOL shouldShow = NFBIsSettingsLikeScreen(window);
+    if (shouldShow && entry == nil) {
+        NFBInstallFloatingEntry();
+    } else if (!shouldShow && entry != nil) {
+        [entry removeFromSuperview];
+        objc_setAssociatedObject(window, kNFBFloatingKey, nil,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+}
+
+// 兜底：三指双击屏幕任意位置，直接打开插件设置（不怕界面结构变化）
+static const void* kNFBTripleTapKey = &kNFBTripleTapKey;
+
+@interface NFBGlobalGestureTarget : NSObject
+- (void)handleThreeFingerDoubleTap:(UITapGestureRecognizer*)gesture;
+@end
+
+@implementation NFBGlobalGestureTarget
+- (void)handleThreeFingerDoubleTap:(UITapGestureRecognizer*)gesture {
+    if (gesture.state != UIGestureRecognizerStateRecognized) {
+        return;
+    }
+    UIViewController* host = gesture.view.window.rootViewController;
+    id account = nil;
+    @try {
+        account = [host valueForKey:@"account"];
+    } @catch (__unused NSException* exception) {
+    }
+    UIViewController* settings = [BHTManager BHTSettingsWithAccount:account];
+    if (settings == nil) {
+        return;
+    }
+    UINavigationController* nav =
+        [[UINavigationController alloc] initWithRootViewController:settings];
+    [topMostController() presentViewController:nav animated:YES completion:nil];
+}
+@end
+
+static void NFBInstallGlobalGesture(void) {
+    UIWindow* window = nil;
+    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) {
+            continue;
+        }
+        for (UIWindow* candidate in ((UIWindowScene*)scene).windows) {
+            if (!candidate.hidden && candidate.isKeyWindow) {
+                window = candidate;
+                break;
+            }
+        }
+        if (window != nil) {
+            break;
+        }
+    }
+    if (window == nil || objc_getAssociatedObject(window, kNFBTripleTapKey) != nil) {
+        return;
+    }
+    static NFBGlobalGestureTarget* target;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        target = [NFBGlobalGestureTarget new];
+    });
+    UITapGestureRecognizer* tap =
+        [[UITapGestureRecognizer alloc] initWithTarget:target
+                                               action:@selector(handleThreeFingerDoubleTap:)];
+    tap.numberOfTouchesRequired = 3;
+    tap.numberOfTapsRequired = 2;
+    tap.cancelsTouchesInView = NO;
+    [window addGestureRecognizer:tap];
+    objc_setAssociatedObject(window, kNFBTripleTapKey, tap, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+
 %ctor {
     NFBStartEntryWatcher();
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
-                       NFBInstallFloatingEntry();
+                       NFBInstallGlobalGesture();
+                       NFBUpdateFloatingVisibility();
                    });
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
