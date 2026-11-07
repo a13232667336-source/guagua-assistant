@@ -135,10 +135,23 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
     return modified ? filteredSections : sections;
 }
 
+
+// 只有时间线类控制器才做 section 过滤：Grok 私聊等页面同样继承
+// TFNItemsDataViewController，之前无差别改 sections 会导致列表反复重载、闪屏。
+static BOOL NFBIsTimelineController(id vc) {
+    NSString* name = NSStringFromClass([vc class]);
+    return [name containsString:@"Timeline"] || [name containsString:@"T1URT"] ||
+           [name containsString:@"T1Home"] || [name containsString:@"ConversationTimeline"];
+}
+
 %hook TFNItemsDataViewController
 
 - (void)setSections:(NSArray*)sections
     restoreScrollPosition:(BOOL)restoreScrollPosition {
+    if (!NFBIsTimelineController(self)) {
+        %orig(sections, restoreScrollPosition);
+        return;
+    }
     %orig(FilteredSections(self, sections), restoreScrollPosition);
 }
 
@@ -146,6 +159,10 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
     reconfigureItemIdentifiers:(NSArray*)identifiers
               withRowAnimation:(long long)animation
                     completion:(id)completion {
+    if (!NFBIsTimelineController(self)) {
+        %orig(sections, identifiers, animation, completion);
+        return;
+    }
     %orig(FilteredSections(self, sections), identifiers, animation,
               completion);
 }

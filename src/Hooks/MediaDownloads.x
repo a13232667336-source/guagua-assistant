@@ -34,27 +34,9 @@ static void CaptureVoiceURL(NSURL* url, NSString* source) {
     }
 }
 
-%hook AVURLAsset
-- (id)initWithURL:(NSURL*)url options:(NSDictionary*)options {
-    CaptureVoiceURL(url, @"AVURLAsset");
-    return %orig;
-}
-%end
 
 // AVAudioPlayer is covered as well as AVURLAsset because the Chat stack no
 // longer has to build an AVPlayer to play a short local note.
-%hook AVAudioPlayer
-- (id)initWithContentsOfURL:(NSURL*)url error:(NSError**)outError {
-    CaptureVoiceURL(url, @"AVAudioPlayer");
-    return %orig;
-}
-- (id)initWithContentsOfURL:(NSURL*)url
-               fileTypeHint:(NSString*)utiString
-                      error:(NSError**)outError {
-    CaptureVoiceURL(url, @"AVAudioPlayer/fileTypeHint");
-    return %orig;
-}
-%end
 
 // DM voice notes are pre-decrypted straight to disk (Documents/dm/.../
 // decrypted-media-v2/.../*.m4a), so the captured URL is normally a local
@@ -190,83 +172,6 @@ static void SetVoiceDownloadLongPressRecognizer(UIView* view,
 
 // Overwrites the recording at the attachment's existing file path, so the
 // composer picks up the replacement without any model changes.
-%hook T1MediaAttachmentsViewCell
-%property (nonatomic, strong) UIButton* uploadButton;
-- (void)updateCellElements {
-    %orig;
-
-    BOOL isVoiceRecording = [self.attachment isKindOfClass:%c(TTMAssetVoiceRecording)];
-
-    if (isVoiceRecording && self.uploadButton == nil) {
-        TFNButton* removeButton = [self valueForKey:@"_removeButton"];
-        if (removeButton == nil) {
-            return;
-        }
-
-        self.uploadButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        UIImageSymbolConfiguration* smallConfig =
-            [UIImageSymbolConfiguration configurationWithScale:UIImageSymbolScaleSmall];
-        UIImage* arrowUpImage = [UIImage systemImageNamed:@"arrow.up" withConfiguration:smallConfig];
-        [self.uploadButton setImage:arrowUpImage forState:UIControlStateNormal];
-        [self.uploadButton addTarget:self
-                              action:@selector(handleUploadButton:)
-                    forControlEvents:UIControlEventTouchUpInside];
-        [self.uploadButton setTintColor:UIColor.labelColor];
-        [self.uploadButton setBackgroundColor:[UIColor blackColor]];
-        [self.uploadButton.layer setCornerRadius:29 / 2];
-        [self.uploadButton setTranslatesAutoresizingMaskIntoConstraints:false];
-
-        [self addSubview:self.uploadButton];
-        [NSLayoutConstraint activateConstraints:@[
-            [self.uploadButton.trailingAnchor constraintEqualToAnchor:removeButton.leadingAnchor
-                                                             constant:-10],
-            [self.uploadButton.topAnchor constraintEqualToAnchor:removeButton.topAnchor],
-            [self.uploadButton.widthAnchor constraintEqualToConstant:29],
-            [self.uploadButton.heightAnchor constraintEqualToConstant:29],
-        ]];
-    }
-
-    self.uploadButton.hidden = !isVoiceRecording;
-}
-%new
-- (void)handleUploadButton:(UIButton*)sender {
-    UIImagePickerController* videoPicker = [[UIImagePickerController alloc] init];
-    videoPicker.mediaTypes = @[(NSString*)kUTTypeMovie];
-    videoPicker.delegate = self;
-
-    [topMostController() presentViewController:videoPicker animated:YES completion:nil];
-}
-%new
-- (void)imagePickerController:(UIImagePickerController*)picker
-    didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey, id>*)info {
-    NSURL* videoURL = info[UIImagePickerControllerMediaURL];
-    TTMAssetVoiceRecording* attachment = self.attachment;
-    NSURL* recorder_url = [NSURL fileURLWithPath:attachment.filePath];
-
-    if (recorder_url != nil) {
-        NSFileManager* fileManager = [NSFileManager defaultManager];
-
-        NSError* error = nil;
-        if ([fileManager fileExistsAtPath:[recorder_url path]]) {
-            [fileManager removeItemAtURL:recorder_url error:&error];
-            if (error) {
-                NSLog(@"[BHTwitter] Error removing existing file: %@", error);
-            }
-        }
-
-        [fileManager copyItemAtURL:videoURL toURL:recorder_url error:&error];
-        if (error) {
-            NSLog(@"[BHTwitter] Error copying file: %@", error);
-        }
-    }
-
-    [picker dismissViewControllerAnimated:true completion:nil];
-}
-%new
-- (void)imagePickerControllerDidCancel:(UIImagePickerController*)picker {
-    [picker dismissViewControllerAnimated:true completion:nil];
-}
-%end
 
 // MARK: - Save tweet as an image
 

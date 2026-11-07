@@ -600,47 +600,8 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 // subscription management; run them against the genuine status so a forced
 // unlock is never announced as premium.
 
-%hook T1AppServicesManager
 
-// Sets the account's tier as a Braze attribute on every activation.
-- (id)_brazeTierStringForAccount:(id)account {
-    BOOL saved = ReportGenuineSubscription;
-    ReportGenuineSubscription = YES;
-    id result = %orig;
-    ReportGenuineSubscription = saved;
-    return result;
-}
 
-%end
-
-%hook T1TabbedAppNavigation
-
-// Opens the real subscription management flow; its premium check should see the
-// genuine status so a forced unlock stops here.
-- (void)showPremiumHubManageSubscriptionWithSource:(NSInteger)source
-                                    withCompletion:(id)completion {
-    BOOL saved = ReportGenuineSubscription;
-    ReportGenuineSubscription = YES;
-    %orig;
-    ReportGenuineSubscription = saved;
-}
-
-%end
-
-%hook T1ProfileSummaryView
-
-// The "under review" prompt shows for a verified-premium user not yet
-// blue-verified — a state the forced tier fabricates for a non-subscriber, so
-// read it against the genuine status.
-- (BOOL)shouldShowUnderReviewButton {
-    BOOL saved = ReportGenuineSubscription;
-    ReportGenuineSubscription = YES;
-    BOOL result = %orig;
-    ReportGenuineSubscription = saved;
-    return result;
-}
-
-%end
 
 // MARK: - Custom navigation - genuine panel availability
 
@@ -728,15 +689,6 @@ BOOL panelIsGenuinelyAvailable(long long panelID) {
 
 static __thread BOOL DashPanelIDQuery = NO;
 
-%hook T1DashContentController
-
-- (void)updateVisiblePanelIDs {
-    DashPanelIDQuery = YES;
-    %orig;
-    DashPanelIDQuery = NO;
-}
-
-%end
 
 
 // MARK: - Grok creation - photo editor

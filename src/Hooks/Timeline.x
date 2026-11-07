@@ -123,21 +123,15 @@ static BOOL IsInEditHistory(UIViewController* viewController) {
     return NO;
 }
 
-%hook T1EditHistoryViewControllerFactory
 
-+ (id)viewControllerWithAccount:(id)account
-                        tweetID:(unsigned long long)tweetID
-                  scribeContext:(id)scribeContext {
-    id viewController = %orig;
-    if (viewController) {
-        objc_setAssociatedObject(viewController, EditHistoryViewControllerKey, @YES,
-                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
-
-    return viewController;
+// 只有时间线类控制器才做 section 过滤：Grok 私聊等页面同样继承
+// TFNItemsDataViewController，之前无差别改 sections 会导致列表反复重载、闪屏。
+static BOOL NFBIsTimelineController(id vc) {
+    NSString* name = NSStringFromClass([vc class]);
+    return [name containsString:@"Timeline"] || [name containsString:@"T1URT"] ||
+           [name containsString:@"T1Home"] || [name containsString:@"ConversationTimeline"];
 }
 
-%end
 
 static NSString* ItemEntryID(id viewModel) {
     if (![viewModel respondsToSelector:@selector(entryID)]) {
@@ -567,6 +561,10 @@ static NSArray* FilteredTimelineSections(TFNItemsDataViewController* dataViewCon
 %hook TFNItemsDataViewController
 
 - (void)setSections:(NSArray*)sections restoreScrollPosition:(BOOL)restoreScrollPosition {
+    if (!NFBIsTimelineController(self)) {
+        %orig(sections, restoreScrollPosition);
+        return;
+    }
     %orig(FilteredTimelineSections(self, sections), restoreScrollPosition);
 }
 
@@ -574,6 +572,10 @@ static NSArray* FilteredTimelineSections(TFNItemsDataViewController* dataViewCon
     reconfigureItemIdentifiers:(NSArray*)identifiers
               withRowAnimation:(long long)animation
                     completion:(id)completion {
+    if (!NFBIsTimelineController(self)) {
+        %orig(sections, identifiers, animation, completion);
+        return;
+    }
     %orig(FilteredTimelineSections(self, sections), identifiers, animation, completion);
 }
 
@@ -672,16 +674,3 @@ static NSString* BHTPollTitleWithPercentage(TFCCardData* cardData,
                                                               (double)total)];
 }
 
-%hook TFCCardData
-
-- (NSString*)stringForKey:(NSString*)key {
-    NSString* title = %orig;
-    return BHTPollTitleWithPercentage(self, key, title);
-}
-
-- (NSString*)stringForKey:(NSString*)key defaultValue:(NSString*)value {
-    NSString* title = %orig;
-    return BHTPollTitleWithPercentage(self, key, title);
-}
-
-%end
