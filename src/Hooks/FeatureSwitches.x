@@ -516,7 +516,7 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 %hook T1AccountsViewController
 
 - (void)private_startLoginFlowWithSender:(id)sender {
-    [WebLoginViewController presentLoginFrom:(UIViewController*)self];
+    [UIViewController presentLoginFrom:(UIViewController*)self];
 }
 
 %end
@@ -528,7 +528,7 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         %orig;
         return;
     }
-    completion([WebLoginViewController loginRootNavigationController]);
+    completion([UIViewController loginRootNavigationController]);
 }
 
 %end

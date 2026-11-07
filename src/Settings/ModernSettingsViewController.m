@@ -592,22 +592,9 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)showAppearanceSettings {
-    AppearanceSettingsViewController* vc =
-        [[AppearanceSettingsViewController alloc] initWithAccount:self.account];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
 - (void)showTimelinesSettings {
     TimelinesSettingsViewController* vc =
         [[TimelinesSettingsViewController alloc] initWithAccount:self.account];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showGrokSettings {
-    ModernSettingsPageViewController* vc =
-        [[ModernSettingsPageViewController alloc] initWithAccount:self.account
-                                                          pageKey:@"grok"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -615,61 +602,6 @@
     ModernSettingsPageViewController* vc =
         [[ModernSettingsPageViewController alloc] initWithAccount:self.account
                                                           pageKey:@"media_downloads"];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showProfilesSettings {
-    ProfilesSettingsViewController* vc =
-        [[ProfilesSettingsViewController alloc] initWithAccount:self.account];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showTweetsSettings {
-    TweetsSettingsViewController* vc =
-        [[TweetsSettingsViewController alloc] initWithAccount:self.account];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showBrandingSettings {
-    ModernSettingsPageViewController* vc =
-        [[ModernSettingsPageViewController alloc] initWithAccount:self.account
-                                                          pageKey:@"branding"];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showExperimentalSettings {
-    ModernSettingsPageViewController* vc =
-        [[ModernSettingsPageViewController alloc] initWithAccount:self.account
-                                                          pageKey:@"experimental"];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showDebugSettings {
-    DebugSettingsViewController* vc =
-        [[DebugSettingsViewController alloc] initWithAccount:self.account];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showSearchSettings {
-    ModernSettingsPageViewController* vc =
-        [[ModernSettingsPageViewController alloc] initWithAccount:self.account
-                                                          pageKey:@"search"];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showWebSettings {
-    WebSettingsViewController* vc = [[WebSettingsViewController alloc] initWithAccount:self.account];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)showPresetsSettings {
-    PresetsSettingsViewController* vc =
-        [[PresetsSettingsViewController alloc] initWithAccount:self.account];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-- (void)showChatSettings {
-    ChatSettingsViewController* vc =
-        [[ChatSettingsViewController alloc] initWithAccount:self.account];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
