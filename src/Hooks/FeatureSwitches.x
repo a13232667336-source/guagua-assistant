@@ -513,25 +513,7 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 
 // MARK: - Override the login screens
 
-%hook T1AccountsViewController
 
-- (void)private_startLoginFlowWithSender:(id)sender {
-    [UIViewController presentLoginFrom:(UIViewController*)self];
-}
-
-%end
-
-%hook T1HostViewController
-
-- (void)makeOnboardingViewControllerWithCompletion:(void (^)(id))completion {
-    if (completion == nil) {
-        %orig;
-        return;
-    }
-    completion([UIViewController loginRootNavigationController]);
-}
-
-%end
 
 // MARK: - High quality images
 

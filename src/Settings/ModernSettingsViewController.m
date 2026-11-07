@@ -593,8 +593,8 @@
 }
 
 - (void)showTimelinesSettings {
-    TimelinesSettingsViewController* vc =
-        [[TimelinesSettingsViewController alloc] initWithAccount:self.account];
+    ModernSettingsPageViewController* vc =
+        [[ModernSettingsPageViewController alloc] initWithAccount:self.account pageKey:@"timelines"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
