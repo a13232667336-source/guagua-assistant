@@ -647,6 +647,7 @@ static void NFBStartEntryWatcher(void) {
                                          }
                                          for (UIViewController* vc in NFBAllControllers()) {
                                              NFBInstallEntryIfNeeded(vc);
+                                             NFBInstallSideMenuEntry(vc);
                                          }
                                      }];
         [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
@@ -711,6 +712,119 @@ static NSString* NFBDumpSettingsClasses(void) {
     NSLog(@"[NFB] settings classes dumped: %lu", (unsigned long)hits.count);
     return report;
 }
+
+
+// MARK: - 侧边栏入口（创作者工作室 与 设置和隐私 之间）
+
+static const void* kNFBSideEntryKey = &kNFBSideEntryKey;
+
+static BOOL NFBLabelMatches(UILabel* label, NSArray<NSString*>* titles) {
+    NSString* text = label.attributedText.length ? label.attributedText.string : label.text;
+    if (text.length == 0) {
+        return NO;
+    }
+    NSString* trimmed =
+        [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    for (NSString* title in titles) {
+        if ([trimmed isEqualToString:title]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static void NFBCollectAllLabels(UIView* view, NSMutableArray<UILabel*>* out, NSInteger depth) {
+    if (view == nil || depth > 40 || view.hidden || view.alpha < 0.01) {
+        return;
+    }
+    if ([view isKindOfClass:[UILabel class]]) {
+        [out addObject:(UILabel*)view];
+        return;
+    }
+    for (UIView* subview in view.subviews) {
+        NFBCollectAllLabels(subview, out, depth + 1);
+    }
+}
+
+static void NFBInstallSideMenuEntry(UIViewController* vc) {
+    if (vc == nil || vc.view.window == nil) {
+        return;
+    }
+    if (objc_getAssociatedObject(vc, kNFBSideEntryKey) != nil) {
+        return;
+    }
+
+    NSMutableArray<UILabel*>* labels = [NSMutableArray array];
+    NFBCollectAllLabels(vc.view, labels, 0);
+    if (labels.count == 0) {
+        return;
+    }
+
+    UILabel* privacy = nil;
+    UILabel* help = nil;
+    UILabel* creator = nil;
+    for (UILabel* label in labels) {
+        if (privacy == nil &&
+            NFBLabelMatches(label, @[ @"设置和隐私", @"设置与隐私", @"Settings and privacy" ])) {
+            privacy = label;
+            continue;
+        }
+        if (help == nil && NFBLabelMatches(label, @[ @"帮助中心", @"Help Center" ])) {
+            help = label;
+            continue;
+        }
+        if (creator == nil && NFBLabelMatches(label, @[ @"创作者工作室", @"Creator Studio" ])) {
+            creator = label;
+        }
+    }
+    if (privacy == nil || help == nil) {
+        return;
+    }
+
+    CGRect privacyRect = [privacy convertRect:privacy.bounds toView:vc.view];
+    CGRect creatorRect = creator ? [creator convertRect:creator.bounds toView:vc.view] : CGRectZero;
+
+    CGFloat gapTop = creator ? CGRectGetMaxY(creatorRect) : CGRectGetMinY(privacyRect) - 56.0;
+    CGFloat gapBottom = CGRectGetMinY(privacyRect);
+    CGFloat gapHeight = gapBottom - gapTop;
+    if (gapHeight < 24.0) {
+        gapHeight = 40.0;
+        gapTop = gapBottom - gapHeight;
+    }
+
+    UIControl* row =
+        [[UIControl alloc] initWithFrame:CGRectMake(0, gapTop, CGRectGetWidth(vc.view.bounds), gapHeight)];
+    row.backgroundColor = [UIColor clearColor];
+
+    UIImageView* icon = [[UIImageView alloc]
+        initWithImage:[UIImage systemImageNamed:@"gearshape.fill"
+                                withConfiguration:[UIImageSymbolConfiguration
+                                                      configurationWithPointSize:19.0]]];
+    icon.tintColor = [UIColor labelColor];
+    icon.contentMode = UIViewContentModeScaleAspectFit;
+    icon.frame = CGRectMake(24.0, (gapHeight - 20.0) / 2.0, 20.0, 20.0);
+    icon.userInteractionEnabled = NO;
+    [row addSubview:icon];
+
+    UILabel* label =
+        [[UILabel alloc] initWithFrame:CGRectMake(64.0, 0, CGRectGetWidth(vc.view.bounds) - 104.0, gapHeight)];
+    NSString* title = [[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"];
+    label.text = title.length ? title : @"NeoFreeBird";
+    label.font = [UIFont systemFontOfSize:17.0 weight:UIFontWeightRegular];
+    label.textColor = [UIColor labelColor];
+    label.userInteractionEnabled = NO;
+    [row addSubview:label];
+
+    [row addTarget:[NFBNavEntryProxy shared]
+            action:@selector(openSettingsFromControl:)
+  forControlEvents:UIControlEventTouchUpInside];
+    objc_setAssociatedObject(row, kNFBHostVCKey, vc, OBJC_ASSOCIATION_ASSIGN);
+
+    [vc.view addSubview:row];
+    objc_setAssociatedObject(vc, kNFBSideEntryKey, row, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSLog(@"[NFB] 侧边栏入口已插入 (h=%.0f)", gapHeight);
+}
+
 
 %ctor {
     NFBStartEntryWatcher();
