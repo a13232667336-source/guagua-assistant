@@ -185,66 +185,6 @@ static void SetVoiceDownloadLongPressRecognizer(UIView* view,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-%hook _TtC16ChatConversation26MessageAttachmentAudioView
-
-- (void)layoutSubviews {
-    %orig;
-
-    if (![BHTSettings boolForKey:@"download_voice_messages"] ||
-        VoiceDownloadLongPressRecognizer(self) != nil) {
-        return;
-    }
-
-    UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc]
-        initWithTarget:self
-                action:@selector(nfb_handleVoiceDownloadLongPress:)];
-    longPress.minimumPressDuration = 0.5;
-    longPress.numberOfTouchesRequired = 2;
-    longPress.cancelsTouchesInView = NO;
-
-    [self addGestureRecognizer:longPress];
-    SetVoiceDownloadLongPressRecognizer(self, longPress);
-}
-
-// The view overrides -gestureRecognizerShouldBegin: for its own waveform pan
-// gesture, and UIKit routes that override through for *every* recognizer
-// attached to the view -- ours included. Without this passthrough the long
-// press installs cleanly and then never begins.
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer*)gestureRecognizer {
-    if (gestureRecognizer == VoiceDownloadLongPressRecognizer(self)) {
-        return YES;
-    }
-    return %orig;
-}
-
-%new
-- (void)nfb_handleVoiceDownloadLongPress:(UILongPressGestureRecognizer*)recognizer {
-    if (recognizer.state != UIGestureRecognizerStateBegan) {
-        return;
-    }
-
-    NSURL* voiceURL = nfbLastCapturedVoiceURL;
-    if (voiceURL == nil) {
-        return;
-    }
-
-    TFNActionItem* downloadItem = [objc_getClass("TFNActionItem")
-        actionItemWithTitle:[[BHTBundle sharedBundle]
-                                localizedStringForKey:@"DOWNLOAD_ACTIVITY_VIEW_LABEL"]
-                  imageName:@"arrow_down_circle_stroke"
-                     action:^{
-                         DownloadVoiceMessage(voiceURL);
-                     }];
-
-    TFNMenuSheetViewController* sheet = [[objc_getClass("TFNMenuSheetViewController") alloc]
-        initWithActionItems:@[downloadItem]];
-
-    [sheet tfnPresentedCustomPresentFromViewController:topMostController()
-                                              animated:YES
-                                            completion:nil];
-}
-
-%end
 
 // MARK: - Upload custom voice
 
@@ -330,54 +270,6 @@ static void SetVoiceDownloadLongPressRecognizer(UIView* view,
 
 // MARK: - Save tweet as an image
 
-%hook TTAStatusInlineShareButton
-- (void)didLongPressActionButton:(UILongPressGestureRecognizer*)gestureRecognizer {
-    if ([BHTSettings boolForKey:@"tweet_to_image"]) {
-        if (gestureRecognizer.state == UIGestureRecognizerStateBegan) {
-            UIView* statusView = self.superview;
-            while (statusView && ![statusView respondsToSelector:@selector(eventHandler)]) {
-                statusView = statusView.superview;
-            }
-
-            UIView* tweetView = nil;
-            id eventHandler = [(T1StandardStatusView*)statusView eventHandler];
-            if ([eventHandler isKindOfClass:UIView.class]) {
-                tweetView = eventHandler;
-            }
-
-            if (tweetView == nil) {
-                UIView* ancestor = self.superview;
-                while (ancestor && ![ancestor isKindOfClass:UITableViewCell.class] &&
-                       ![ancestor isKindOfClass:UICollectionViewCell.class]) {
-                    ancestor = ancestor.superview;
-                }
-                tweetView = ancestor;
-            }
-
-            if (tweetView == nil) {
-                return %orig;
-            }
-
-            UIImage* tweetImage = imageFromView(tweetView);
-            NSData* pngData = UIImagePNGRepresentation(tweetImage);
-            NSURL* pngURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
-                URLByAppendingPathComponent:[NSString
-                                                stringWithFormat:@"%@.png", [[NSUUID UUID] UUIDString]]];
-            [pngData writeToURL:pngURL atomically:YES];
-            UIActivityViewController* acVC =
-                [[UIActivityViewController alloc] initWithActivityItems:@[pngURL]
-                                                  applicationActivities:nil];
-            if (is_iPad()) {
-                acVC.popoverPresentationController.sourceView = self;
-                acVC.popoverPresentationController.sourceRect = self.frame;
-            }
-            [topMostController() presentViewController:acVC animated:true completion:nil];
-            return;
-        }
-    }
-    return %orig;
-}
-%end
 
 // MARK: - Tweet video download
 

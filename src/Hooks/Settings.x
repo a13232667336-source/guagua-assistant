@@ -295,31 +295,6 @@ static NSString* CustomFontName(BOOL isBold) {
 
 %end
 
-%hook XDSButtonContentElement
-+ (id)labelWithText:(id)text font:(id)font color:(id)color {
-    id orig = %orig;
-    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"custom_fonts"]) {
-        return orig;
-    }
-
-    BOOL isBold = [font containsString:@"Bold"] ||
-                  [font containsString:@"Heavy"];
-
-    NSString* customName = [[NSUserDefaults standardUserDefaults]
-        objectForKey:isBold ? @"bhtwitter_font_2" : @"bhtwitter_font_1"];
-    if (!customName) {
-        return orig;
-    }
-    UIFont* customFont = [UIFont fontWithName:customName
-                                         size:[(UIFont*)orig pointSize]];
-    if (!customFont) {
-        return orig;
-    }
-
-    return %orig(text, customFont, color);
-}
-
-%end
 
 // MARK: - 万能入口兜底（X 12.4x 设置页结构变了也能进）
 

@@ -10,14 +10,6 @@
 #import "Core/BHTManager.h"
 #import "Settings/ModernSettingsCells.h"
 #import "Settings/ModernSettingsPageViewController.h"
-#import "Settings/Pages/AppearanceSettingsViewController.h"
-#import "Settings/Pages/ChatSettingsViewController.h"
-#import "Settings/Pages/DebugSettingsViewController.h"
-#import "Settings/Pages/PresetsSettingsViewController.h"
-#import "Settings/Pages/ProfilesSettingsViewController.h"
-#import "Settings/Pages/TimelinesSettingsViewController.h"
-#import "Settings/Pages/TweetsSettingsViewController.h"
-#import "Settings/Pages/WebSettingsViewController.h"
 #import "ThemeColor/Palette.h"
 
 @interface ModernSettingsViewController () <UITableViewDataSource, UITableViewDelegate>
@@ -166,105 +158,22 @@
 - (void)setupSections {
     self.sections = @[
         @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_LAYOUT_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_LAYOUT_SUBTITLE"],
-            @"icon": @"settings_stroke",
-            @"action": @"showLayoutSettings"
+            @"title" : [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_LAYOUT_TITLE"],
+            @"subtitle" : [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_LAYOUT_SUBTITLE"],
+            @"icon" : @"settings_stroke",
+            @"action" : @"showLayoutSettings"
         },
         @{
-            @"title":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_APPEARANCE_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_APPEARANCE_SUBTITLE"],
-            @"icon": @"paintbrush_stroke",
-            @"action": @"showAppearanceSettings"
+            @"title" : [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_TIMELINES_TITLE"],
+            @"subtitle" : [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_TIMELINES_SUBTITLE"],
+            @"icon" : @"home_stroke",
+            @"action" : @"showTimelinesSettings"
         },
         @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_GROK_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_GROK_SUBTITLE"],
-            @"icon": @"grok_icon_stroke",
-            @"action": @"showGrokSettings"
-        },
-        @{
-            @"title":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_TIMELINES_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_TIMELINES_SUBTITLE"],
-            @"icon": @"home_stroke",
-            @"action": @"showTimelinesSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_TWEETS_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_TWEETS_SUBTITLE"],
-            @"icon": @"quill",
-            @"action": @"showTweetsSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_MEDIA_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_MEDIA_SUBTITLE"],
-            @"icon": @"media_tab_stroke",
-            @"action": @"showDownloadsSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_PROFILES_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_PROFILES_SUBTITLE"],
-            @"icon": @"account",
-            @"action": @"showProfilesSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_CHAT_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_CHAT_SUBTITLE"],
-            @"icon": @"messages_stroke",
-            @"action": @"showChatSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_SEARCH_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_SEARCH_SUBTITLE"],
-            @"icon": @"search_stroke",
-            @"action": @"showSearchSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_WEB_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_WEB_SUBTITLE"],
-            @"icon": @"globe_stroke",
-            @"action": @"showWebSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_BRANDING_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_BRANDING_SUBTITLE"],
-            @"icon": @"hash_stroke",
-            @"action": @"showBrandingSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_PRESETS_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_PRESETS_SUBTITLE"],
-            @"icon": @"receipt_checkmark_stroke",
-            @"action": @"showPresetsSettings"
-        },
-        @{
-            @"title":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_EXPERIMENTAL_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_EXPERIMENTAL_SUBTITLE"],
-            @"icon": @"flask",
-            @"action": @"showExperimentalSettings"
-        },
-        @{
-            @"title": [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_DEBUG_TITLE"],
-            @"subtitle":
-                [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_DEBUG_SUBTITLE"],
-            @"icon": @"code",
-            @"action": @"showDebugSettings"
+            @"title" : [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_MEDIA_TITLE"],
+            @"subtitle" : [[BHTBundle sharedBundle] localizedStringForKey:@"MODERN_SETTINGS_MEDIA_SUBTITLE"],
+            @"icon" : @"media_tab_stroke",
+            @"action" : @"showDownloadsSettings"
         }
     ];
 }

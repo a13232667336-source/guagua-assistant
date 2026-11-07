@@ -63,77 +63,17 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 
 // The repository publishes the pinned list through this single delegate call, so
 // handing it an empty array hides the tabs without touching persisted state.
-%hook _TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController
-
-- (void)pinnedTimelinesRepository:(id)repository
-    didChangeWithPinnedTimelineModels:(NSArray*)models {
-    PinnedTimelinesRepository = repository;
-    if (models.count > 0) {
-        LastPinnedTimelineModels = [models copy];
-    }
-    BOOL hide = [BHTSettings boolForKey:@"hide_custom_timelines"];
-
-    %orig(repository, hide ? @[] : models);
-    SyncHomeAddTabButton(self, hide);
-}
-
-- (id)tfn_navigationBarAccessoryView {
-    id accessoryView = %orig;
-    SyncHomeAddTabButton(self, [BHTSettings boolForKey:@"hide_custom_timelines"]);
-    return accessoryView;
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-    %orig;
-    SyncHomeAddTabButton(self, [BHTSettings boolForKey:@"hide_custom_timelines"]);
-}
-
-%end
 
 // While hiding, the overridden pinned-tabs feature switches make the app compute
 // an empty pinned list; freeze writes so it can't overwrite the real tabs.
-%hook _TtC32TwitterHomeFeatureImplementation31CachedPinnedTimelinesRepository
-
-- (void)updatePinnedTimelines:(id)timelines {
-    if (!PinnedTimelinesWriteBypass && [BHTSettings boolForKey:@"hide_custom_timelines"]) {
-        return;
-    }
-
-    %orig;
-}
-
-%end
 
 // MARK: - Force tweet images to full frame
 
-%hook T1StandardStatusAttachmentViewAdapter
-
-// attachmentType 2 = photos, displayType 1 = full frame
-- (NSUInteger)displayType {
-    if (self.attachmentType == 2) {
-        return [BHTSettings boolForKey:@"force_tweet_full_frame"] ? 1 : %orig;
-    }
-
-    return %orig;
-}
-
-%end
 
 // MARK: - Hide the Spaces bar
 
 // The bar is still the repurposed Fleets line; both home timeline implementations
 // share this visibility gate, re-evaluated on every content or settings update.
-%hook T1FleetLineHeaderController
-
-- (BOOL)_t1_shouldShowFleetLine {
-    if ([BHTSettings boolForKey:@"hide_spaces"]) {
-        return NO;
-    }
-
-    return %orig;
-}
-
-%end
 
 // MARK: - Hide "Discover more", who-to-follow and prompts
 
@@ -653,18 +593,6 @@ static NSArray* FilteredTimelineSections(TFNItemsDataViewController* dataViewCon
 
 %end
 
-%hook TFNFloatingActionButton
-- (void)didMoveToWindow {
-    %orig;
-
-    if ([BHTSettings boolForKey:@"hide_tweet_button"]) {
-        self.userInteractionEnabled = NO;
-        self.hidden = YES;
-        self.alpha = 0.0;
-    }
-}
-
-%end
 
 // Polls carry at most four choices. Don't derive the count from the card name:
 // text polls are "poll2choice_text_only", but image polls arrive as

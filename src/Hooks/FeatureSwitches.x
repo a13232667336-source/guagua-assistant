@@ -510,57 +510,6 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 
 // MARK: - Typed feature switch accessors
 
-%hook TFSAccountFeatureSwitches
-
-// Sets the scroll indicator in -[TFNDataViewController loadView]; the read
-// bypasses the boolForKey: funnels above via a Swift access-once provider.
-+ (BOOL)isShowsVerticalScrollIndicatorEnabled {
-    return [BHTSettings boolForKey:@"show_scroll_indicator"] ? YES : %orig;
-}
-
-// Premium row in Settings. Its gate (subscriptions_enabled || gating_bypass &&
-// isPremiumTierUser) is on for everyone as an upsell, so %orig can't hide
-// it — short-circuit to NO unless the account (the provider) is genuinely
-// premium.
-- (BOOL)isSubscriptionsSettingsItemEnabledWithProvider:(id)provider {
-    if (![provider respondsToSelector:@selector(isPremiumTierUser)]) {
-        return %orig;
-    }
-
-    BOOL saved = ReportGenuineSubscription;
-    ReportGenuineSubscription = YES;
-    BOOL genuinePremium =
-        ((BOOL (*)(id, SEL))objc_msgSend)(provider, @selector(isPremiumTierUser));
-    ReportGenuineSubscription = saved;
-
-    if (!genuinePremium) {
-        return NO;
-    }
-    return %orig;
-}
-
-// Custom navigation: tab gates read as typed accessors instead of through the
-// keyed funnels, forced on like the keyed gates so their panels' entries build.
-- (BOOL)birdwatchHomePageIsEnabled {
-    if (ReportGenuineTabGates) {
-        return %orig;
-    }
-    return YES;
-}
-
-- (BOOL)birdwatchHistoryIsEnabled {
-    if (ReportGenuineTabGates) {
-        return %orig;
-    }
-    return YES;
-}
-
-// Video downloads are likewise enabled outright for every account.
-- (BOOL)isVideoCacheEnabled {
-    return YES;
-}
-
-%end
 
 // MARK: - Override the login screens
 
@@ -807,111 +756,17 @@ static __thread BOOL DashPanelIDQuery = NO;
 
 %end
 
-%hook T1TabbedAppNavigationViewController
-
-- (NSArray*)visiblePanelIDsForAppNavigation:(id)appNavigation {
-    NSArray* panelIDs = %orig;
-    if (!DashPanelIDQuery) {
-        return panelIDs;
-    }
-
-    NSMutableArray* spoofed = [panelIDs mutableCopy];
-    void (^claim)(NSNumber*) = ^(NSNumber* panelID) {
-        if (![spoofed containsObject:panelID]) {
-            [spoofed addObject:panelID];
-        }
-    };
-
-    for (NSNumber* panelID in @[@13, @15, @16, @17]) {
-        if (!panelIsGenuinelyAvailable(panelID.longLongValue)) {
-            claim(panelID);
-        }
-    }
-
-    if ([BHTSettings boolForKey:@"hide_grok_sidebar"]) {
-        claim(@14);
-    }
-
-    if (!AccountIsGenuinelyPremium()) {
-        claim(@15);
-    }
-    claim(@20); // News
-
-    return spoofed;
-}
-
-%end
 
 // MARK: - Grok creation - photo editor
 
 // The photo editor's Edit with Grok entry has no feature switch of its own;
 // both delegates hardcode YES.
 
-%hook T1TweetComposeViewController
 
-- (BOOL)photoEditorCanEditWithGrok:(id)photoEditor {
-    return [BHTSettings boolForKey:@"hide_grok_create"] ? NO : %orig;
-}
-
-%end
-
-%hook T1StatusPhotoEditorHandler
-
-- (BOOL)photoEditorCanEditWithGrok:(id)photoEditor {
-    return [BHTSettings boolForKey:@"hide_grok_create"] ? NO : %orig;
-}
-
-%end
 
 // MARK: - Sensitive media warnings
 
-%hook TFNTwitterStatus
 
-- (BOOL)hasImageInterstitial {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? NO
-               : %orig;
-}
-
-- (id)imageInterstitial {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? nil
-               : %orig;
-}
-
-- (id)innerImageInterstitial {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? nil
-               : %orig;
-}
-
-%end
-
-%hook HFHealthSafetyFeature
-
-+ (BOOL)isTweetMedialInterstitialEnabled:(id)featureSwitches {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? NO
-               : %orig;
-}
-
-%end
 
 // MARK: - Video upload quality
-%hook T1VideoQualityUploadSettings
-- (BOOL)shouldAllowFullHdVideoUpload:(long long)upload {
-    return [BHTSettings boolForKey:@"upload_full_hd_videos"] ? YES : %orig;
-}
-%end
 
-%hook T1LongerVideoUploadEnabledConfig
-
-- (BOOL)isUploadFullHDVideoEnabled {
-    return [BHTSettings boolForKey:@"upload_full_hd_videos"] ? YES : %orig;
-}
-
-- (BOOL)isUploadFullHDVideoEnabledByDefault {
-    return [BHTSettings boolForKey:@"upload_full_hd_videos"] ? YES : %orig;
-}
-
-%end
