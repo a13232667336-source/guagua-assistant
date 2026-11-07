@@ -1,0 +1,88 @@
+name: build-nfb-7.1.0
+
+# 上游 NeoFreeBird v7.1.0 原版，只出 dylib / deb（不编 IPA、不依赖额外子模块）
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-13
+    env:
+      THEOS: ${{ github.workspace }}/theos
+      BUILD_DIR: ${{ github.workspace }}/ffmpeg-build
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: tools
+        run: |
+          brew install make || true
+          brew install dpkg || true
+          brew install ldid || true
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: theos
+        run: git clone --recursive --depth 1 https://github.com/theos/theos "$THEOS"
+
+      - name: ios sdk 16.5
+        run: |
+          mkdir -p "$THEOS/sdks"
+          git clone -n --depth=1 --filter=tree:0 https://github.com/theos/sdks /tmp/sdks
+          cd /tmp/sdks
+          git sparse-checkout set --no-cone iPhoneOS16.5.sdk
+          git checkout
+          mv /tmp/sdks/iPhoneOS16.5.sdk "$THEOS/sdks/"
+
+      - name: ffmpeg cache
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: src/deps/ffmpeg-kit-next/build
+          key: nfb710-ffmpeg-${{ hashFiles('src/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}
+
+      - name: build ffmpeg
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: |
+          cd src
+          if [ ! -f deps/ffmpeg-kit-next/upstream/apple/src/FFmpegKit.m ]; then
+            git init -q deps/ffmpeg-kit-next/upstream
+            cd deps/ffmpeg-kit-next/upstream
+            git remote add origin https://github.com/arthenica/ffmpeg-kit-next
+            git fetch -q --depth 1 origin 3e223118e6e8fb6208693ecf3952e77cd096f587
+            git checkout -q FETCH_HEAD
+            cd "$GITHUB_WORKSPACE/src"
+          fi
+          sed -i '' -e 's/\r$//' deps/ffmpeg-kit-next/build-ffmpeg.sh
+          bash deps/ffmpeg-kit-next/build-ffmpeg.sh
+
+      - name: build tweak
+        run: |
+          cd src
+          make clean || true
+          make
+
+      - name: package
+        run: |
+          cd src
+          DYLIB=$(find .theos/obj -name 'BHTwitter.dylib' | head -n1)
+          echo "dylib = $DYLIB"
+          test -n "$DYLIB"
+          mkdir -p out
+          cp "$DYLIB" out/BHTwitter-v7.1.0.dylib
+          STAGE=$(mktemp -d)
+          cp "$DYLIB" "$STAGE/BHTwitter.dylib"
+          cp -R "layout/Library/Application Support/BHT/BHTwitter.bundle" "$STAGE/BHTwitter.bundle"
+          ( cd "$STAGE" && zip -qry "$GITHUB_WORKSPACE/src/out/NFB-7.1.0-TrollFools.zip" . )
+          make package || true
+          cp packages/*.deb out/ 2>/dev/null || true
+          ls -lh out
+
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: NFB-7.1.0
+          path: src/out/*
+          if-no-files-found: error
