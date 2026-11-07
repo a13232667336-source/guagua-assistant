@@ -647,6 +647,7 @@ static void NFBStartEntryWatcher(void) {
                                              UIApplicationStateActive) {
                                              return;
                                          }
+                                         NFBInstallFloatingEntry();
                                          for (UIViewController* vc in NFBAllControllers()) {
                                              NFBInstallEntryIfNeeded(vc);
                                              NFBInstallSideMenuEntry(vc);
@@ -828,8 +829,124 @@ static void NFBInstallSideMenuEntry(UIViewController* vc) {
 }
 
 
+
+// MARK: - 百分百可见的悬浮入口（不看 X 的界面结构）
+
+// X 12.4x 的设置页和侧边栏都是 SwiftUI 自绘，拿不到 UILabel / 设置类名，
+// 所以再加一个完全由我们自己画的悬浮齿轮：只要进程活着就一定在。
+
+static const void* kNFBFloatingKey = &kNFBFloatingKey;
+
+@interface NFBFloatingEntry : UIControl
+@end
+
+@implementation NFBFloatingEntry
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    if ((self = [super initWithFrame:frame])) {
+        self.backgroundColor = [UIColor secondarySystemBackgroundColor];
+        self.layer.cornerRadius = frame.size.width / 2.0;
+        self.layer.shadowColor = [UIColor blackColor].CGColor;
+        self.layer.shadowOpacity = 0.25;
+        self.layer.shadowRadius = 8.0;
+        self.layer.shadowOffset = CGSizeMake(0, 2);
+        self.alpha = 0.92;
+
+        UIImageView* icon = [[UIImageView alloc]
+            initWithImage:[UIImage systemImageNamed:@"gearshape.fill"
+                                    withConfiguration:[UIImageSymbolConfiguration
+                                                          configurationWithPointSize:20.0]]];
+        icon.tintColor = [UIColor labelColor];
+        icon.contentMode = UIViewContentModeScaleAspectFit;
+        icon.frame = CGRectMake((frame.size.width - 22.0) / 2.0,
+                                (frame.size.height - 22.0) / 2.0, 22.0, 22.0);
+        icon.userInteractionEnabled = NO;
+        [self addSubview:icon];
+
+        [self addTarget:[NFBNavEntryProxy shared]
+                 action:@selector(openSettingsFromControl:)
+       forControlEvents:UIControlEventTouchUpInside];
+
+        UIPanGestureRecognizer* pan =
+            [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+        [self addGestureRecognizer:pan];
+    }
+    return self;
+}
+
+- (void)handlePan:(UIPanGestureRecognizer*)pan {
+    UIView* host = self.superview;
+    if (host == nil) {
+        return;
+    }
+    CGPoint translation = [pan translationInView:host];
+    CGPoint center = self.center;
+    center.x += translation.x;
+    center.y += translation.y;
+    center.x = MAX(30.0, MIN(CGRectGetWidth(host.bounds) - 30.0, center.x));
+    center.y = MAX(80.0, MIN(CGRectGetHeight(host.bounds) - 60.0, center.y));
+    self.center = center;
+    [pan setTranslation:CGPointZero inView:host];
+
+    if (pan.state == UIGestureRecognizerStateEnded) {
+        [[NSUserDefaults standardUserDefaults] setDouble:center.x forKey:@"nfb_fab_x"];
+        [[NSUserDefaults standardUserDefaults] setDouble:center.y forKey:@"nfb_fab_y"];
+    }
+}
+
+@end
+
+static void NFBInstallFloatingEntry(void) {
+    UIWindow* window = nil;
+    for (UIScene* scene in UIApplication.sharedApplication.connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) {
+            continue;
+        }
+        for (UIWindow* candidate in ((UIWindowScene*)scene).windows) {
+            if (!candidate.hidden && candidate.isKeyWindow) {
+                window = candidate;
+                break;
+            }
+        }
+        if (window != nil) {
+            break;
+        }
+    }
+    if (window == nil) {
+        return;
+    }
+    if (objc_getAssociatedObject(window, kNFBFloatingKey) != nil) {
+        return;
+    }
+
+    CGFloat size = 46.0;
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    CGFloat x = [defaults doubleForKey:@"nfb_fab_x"];
+    CGFloat y = [defaults doubleForKey:@"nfb_fab_y"];
+    if (x <= 0 || y <= 0) {
+        x = CGRectGetWidth(window.bounds) - size / 2.0 - 10.0;
+        y = CGRectGetHeight(window.bounds) * 0.55;
+    }
+
+    NFBFloatingEntry* entry = [[NFBFloatingEntry alloc] initWithFrame:CGRectMake(0, 0, size, size)];
+    entry.center = CGPointMake(x, y);
+    entry.autoresizingMask = UIViewAutoresizingNone;
+    objc_setAssociatedObject(entry, kNFBHostVCKey, window.rootViewController,
+                             OBJC_ASSOCIATION_ASSIGN);
+
+    [window addSubview:entry];
+    objc_setAssociatedObject(window, kNFBFloatingKey, entry,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSLog(@"[NFB] 悬浮入口已挂上");
+}
+
+
 %ctor {
     NFBStartEntryWatcher();
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       NFBInstallFloatingEntry();
+                   });
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
