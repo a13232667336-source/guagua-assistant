@@ -634,6 +634,8 @@ static void NFBInstallEntryIfNeeded(UIViewController* vc) {
     }
     NFBInstallNavBarEntry(vc);
 }
+static void NFBInstallSideMenuEntry(UIViewController* vc);
+
 static void NFBStartEntryWatcher(void) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
