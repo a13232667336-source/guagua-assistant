@@ -25,7 +25,7 @@
 + (instancetype)shared {
     static NFBProgressBar* bar;
     static dispatch_once_t once;
-    dispatch_once(&onceToken, ^{
+    dispatch_once(&once, ^{
         bar = [NFBProgressBar new];
     });
     return bar;
