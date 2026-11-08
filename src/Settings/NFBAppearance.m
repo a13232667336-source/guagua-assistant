@@ -10,18 +10,18 @@
 static const void* kNFBCardViewKey = &kNFBCardViewKey;
 
 UIColor* NFBAccentColor(void) {
-    return [UIColor colorWithRed:1.00 green:0.23 blue:0.19 alpha:1.0];  // 红
+    return [UIColor colorWithRed:0.42 green:0.28 blue:0.98 alpha:1.0];  // 紫
 }
 
 UIColor* NFBAccentForPage(NSString* pageKey) {
     if ([pageKey isEqualToString:@"general"]) {
-        return [UIColor colorWithRed:1.00 green:0.23 blue:0.19 alpha:1.0];  // 红
+        return [UIColor colorWithRed:0.42 green:0.28 blue:0.98 alpha:1.0];  // 紫
     }
     if ([pageKey isEqualToString:@"timelines"]) {
-        return [UIColor colorWithRed:1.00 green:0.42 blue:0.32 alpha:1.0];  // 珊瑚橙
+        return [UIColor colorWithRed:0.42 green:0.28 blue:0.98 alpha:1.0];  // 紫
     }
     if ([pageKey isEqualToString:@"media_downloads"]) {
-        return [UIColor colorWithRed:0.20 green:0.52 blue:1.00 alpha:1.0];  // 亮蓝
+        return [UIColor colorWithRed:0.42 green:0.28 blue:0.98 alpha:1.0];  // 紫
     }
     return NFBAccentColor();
 }
