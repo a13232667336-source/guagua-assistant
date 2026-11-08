@@ -1,9 +1,9 @@
 /*
   Language: tr
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Twitter’ı kişiselleştirin: reklamları gizleyin, Blue özelliklerini etkinleştirin ve çok daha fazlasını yapın.";
 
 /* Alerts and popups */
@@ -66,7 +66,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Havalı Çocuklar";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Özel Teşekkürler";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "NeoFreeBird’i takip et";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "呱呱助手’i takip et";
 
 
 /* General */
@@ -397,7 +397,7 @@
 /* Deprecated */
 
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Burada henüz görülecek bir şey yok";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Bu bölüm çok yakında geliyor. Daha fazla NeoFreeBird özelliği için takipte kalın!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Bu bölüm çok yakında geliyor. Daha fazla 呱呱助手 özelliği için takipte kalın!";
 
 "SOURCE_UNAVAILABLE" = "Kaynak kullanılamıyor";
 
@@ -489,7 +489,7 @@
 "SETTINGS_EXPORT_WRITE_FAILED" = "Ayar dosyası oluşturulamadı.";
 
 "SETTINGS_IMPORT_CONFIRM_TITLE" = "Ayarlar içe aktarılsın mı?";
-"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Mevcut NeoFreeBird ayarlarınız seçtiğiniz dosyadaki ayarlarla değiştirilecektir.";
+"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Mevcut 呱呱助手 ayarlarınız seçtiğiniz dosyadaki ayarlarla değiştirilecektir.";
 "SETTINGS_IMPORT_CONFIRM_BUTTON" = "Dosya seç";
 
 "SETTINGS_IMPORT_FAILED_TITLE" = "İçe aktarma başarısız";
@@ -499,7 +499,7 @@
 "SETTINGS_IMPORT_LATER_BUTTON" = "Daha sonra";
 
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "Bu dosya okunamadı.";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "Bu dosya bir NeoFreeBird ayar dışa aktarımı değil.";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "Bu dosya bir 呱呱助手 ayar dışa aktarımı değil.";
 "SETTINGS_TRANSFER_NO_SETTINGS" = "Bu dosya bu sürümün tanıdığı hiçbir ayar içermiyor.";
 
 

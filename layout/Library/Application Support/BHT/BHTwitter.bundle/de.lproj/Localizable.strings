@@ -1,9 +1,9 @@
 /*
   Language: de
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Passe dein Twitter-Erlebnis an. Verstecke Werbung, aktiviere Blue-Funktionen und mehr.";
 
 /*Alerts and popups*/
@@ -52,7 +52,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Coole Kinder";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Besonderer Dank";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "NeoFreeBird folgen";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "呱呱助手 folgen";
 
 /*General*/
 
@@ -266,7 +266,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Hier gibt es noch nichts zu sehen.";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Dieser Bereich kommt bald. Freu dich auf weitere NeoFreeBird-Funktionen!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Dieser Bereich kommt bald. Freu dich auf weitere 呱呱助手-Funktionen!";
 
 "SOURCE_UNAVAILABLE" = "Quelle nicht verfügbar";
 

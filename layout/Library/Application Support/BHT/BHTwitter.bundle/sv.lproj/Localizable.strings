@@ -1,9 +1,9 @@
 /*
   Language: sv
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Justera Twitter. Dölj annonser, aktivera Blue-funktioner och mycket mer.";
 
 /*Alerts and popups*/
@@ -52,7 +52,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Coola killar";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Tack till";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Följ NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Följ 呱呱助手";
 
 /*General*/
 
@@ -266,7 +266,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Här var det tomt.";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Det finns inga inställningar i den här kategorin ännu. Håll utkik efter framtida uppdateringar för NeoFreeBird!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Det finns inga inställningar i den här kategorin ännu. Håll utkik efter framtida uppdateringar för 呱呱助手!";
 
 "SOURCE_UNAVAILABLE" = "Källa otillgänglig";
 

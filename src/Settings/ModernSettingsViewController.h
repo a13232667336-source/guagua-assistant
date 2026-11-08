@@ -1,6 +1,6 @@
 //
 //  ModernSettingsViewController.h
-//  NeoFreeBird
+//  呱呱助手
 //
 //  Created by nyathea.
 //

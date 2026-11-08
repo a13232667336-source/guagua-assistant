@@ -1,6 +1,6 @@
 //
 //  BHTHookHelpers.h
-//  NeoFreeBird
+//  呱呱助手
 //
 //  Shared imports and helpers for the hook files in src/Hooks.
 //

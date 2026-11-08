@@ -1,9 +1,9 @@
 /*
   Language: ko
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "트위터를 커스텀 해보세요. 광고를 숨기거나 Twitter Blue의 기능을 활성화할 수 있으며, 이외에도 다양한 기능이 있습니다.";
 
 /*Alerts and popups*/
@@ -65,7 +65,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "멋진 분들";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "도움을 주신 분들";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "NeoFreeBird 팔로우하기";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "呱呱助手 팔로우하기";
 
 /*General*/
 
@@ -354,7 +354,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "아직 표시할 내용이 없습니다";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "이 섹션은 곧 출시될 예정입니다. NeoFreeBird의 다음 업데이트를 기대해 주세요!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "이 섹션은 곧 출시될 예정입니다. 呱呱助手의 다음 업데이트를 기대해 주세요!";
 
 "SOURCE_UNAVAILABLE" = "소스 확인 불가";
 
@@ -428,7 +428,7 @@
 "SETTINGS_EXPORT_WRITE_FAILED" = "설정 파일을 생성할 수 없습니다.";
 
 "SETTINGS_IMPORT_CONFIRM_TITLE" = "설정을 불러오시겠습니까?";
-"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "현재 NeoFreeBird 설정이 선택한 파일의 설정으로 대체됩니다.";
+"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "현재 呱呱助手 설정이 선택한 파일의 설정으로 대체됩니다.";
 "SETTINGS_IMPORT_CONFIRM_BUTTON" = "파일 선택";
 "SETTINGS_IMPORT_FAILED_TITLE" = "불러오기 실패";
 "SETTINGS_IMPORT_SUCCESS_TITLE" = "설정 불러옴";
@@ -437,7 +437,7 @@
 "SETTINGS_IMPORT_LATER_BUTTON" = "나중에";
 
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "해당 파일을 읽을 수 없습니다.";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "해당 파일은 NeoFreeBird 설정 내보내기 파일이 아닙니다.";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "해당 파일은 呱呱助手 설정 내보내기 파일이 아닙니다.";
 "SETTINGS_TRANSFER_NO_SETTINGS" = "해당 파일에 현재 버전에서 인식할 수 있는 설정이 포함되어 있지 않습니다.";
 
 /* Common UI Elements & Time Selectors */

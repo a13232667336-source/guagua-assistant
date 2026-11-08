@@ -1,9 +1,9 @@
 /*
   Language: uk
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Налаштуйте Twitter: вимкніть рекламу, увімкніть функції Blue та інше.";
 
 /*Alerts and popups*/
@@ -52,7 +52,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Круті діти";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Особлива подяка";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Стежте за NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Стежте за 呱呱助手";
 
 /*General*/
 
@@ -266,7 +266,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Поки що тут нічого немає.";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Цей розділ незабаром з'явиться. Слідкуйте за новими функціями NeoFreeBird!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Цей розділ незабаром з'явиться. Слідкуйте за новими функціями 呱呱助手!";
 
 "SOURCE_UNAVAILABLE" = "Джерело недоступне";
 

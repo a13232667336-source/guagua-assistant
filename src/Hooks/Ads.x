@@ -1,6 +1,6 @@
 //
 //  Ads.x
-//  NeoFreeBird
+//  呱呱助手
 //
 
 #import "HookHelpers.h"

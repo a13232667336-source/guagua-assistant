@@ -1,9 +1,9 @@
 /*
   Language: pl
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Podrasuj swojego Twittera. Ukryj reklamy, włącz funkcje z Blue i wiele więcej.";
 
 /*Alerts and popups*/
@@ -65,7 +65,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Superowe ziomki";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Specjalne podziękowania";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Obserwuj NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Obserwuj 呱呱助手";
 
 /*General*/
 
@@ -344,7 +344,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Na razie nic tu nie ma";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Ta sekcja pojawi się wkrótce. Wypatruj nowych funkcji NeoFreeBird!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Ta sekcja pojawi się wkrótce. Wypatruj nowych funkcji 呱呱助手!";
 
 "SOURCE_UNAVAILABLE" = "Źródło niedostępne";
 
@@ -413,7 +413,7 @@
 "SETTINGS_EXPORT_WRITE_FAILED" = "Nie udało się utworzyć pliku z ustawieniami.";
 
 "SETTINGS_IMPORT_CONFIRM_TITLE" = "Zaimportować ustawienia?";
-"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Obecne ustawienia NeoFreeBird zostaną zastąpione ustawieniami z wybranego pliku.";
+"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Obecne ustawienia 呱呱助手 zostaną zastąpione ustawieniami z wybranego pliku.";
 "SETTINGS_IMPORT_CONFIRM_BUTTON" = "Wybierz plik";
 "SETTINGS_IMPORT_FAILED_TITLE" = "Import nie powiódł się";
 "SETTINGS_IMPORT_SUCCESS_TITLE" = "Zaimportowano ustawienia";
@@ -422,7 +422,7 @@
 "SETTINGS_IMPORT_LATER_BUTTON" = "Później";
 
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "Nie udało się odczytać tego pliku.";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "Ten plik nie jest eksportem ustawień NeoFreeBird.";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "Ten plik nie jest eksportem ustawień 呱呱助手.";
 "SETTINGS_TRANSFER_NO_SETTINGS" = "Ten plik nie zawiera żadnych ustawień, które rozpoznaje ta wersja.";
 
 /* Common UI Elements & Time Selectors */

@@ -1,9 +1,9 @@
 /*
   Language: id
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Atur Twitter kamu: sembunyikan iklan, aktifkan fitur Blue, dan lainnya.";
 
 /*Alerts and popups*/
@@ -52,7 +52,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Anak keren";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Ucapan terima kasih khusus";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Ikuti NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Ikuti 呱呱助手";
 
 /*General*/
 
@@ -266,7 +266,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Belum ada yang bisa dilihat di sini.";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Bagian ini akan segera hadir. Nantikan lebih banyak fitur NeoFreeBird!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Bagian ini akan segera hadir. Nantikan lebih banyak fitur 呱呱助手!";
 
 "SOURCE_UNAVAILABLE" = "Sumber Tidak Tersedia";
 

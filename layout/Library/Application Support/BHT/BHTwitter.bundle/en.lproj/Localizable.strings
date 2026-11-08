@@ -97,7 +97,7 @@
 "FLEX_TWITTER_TITLE" = "Debug mode";
 "FOLLOW_CONFIRM_DETAIL" = "Ask before following someone.";
 "FOLLOW_CONFIRM_TITLE" = "Confirm follows";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Follow NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Follow 呱呱助手";
 "FONT_SYSTEM_DEFAULT_SUBTITLE" = "System Default";
 "FORCE_TWEET_FULL_FRAME_TITLE" = "Large images";
 "GENERIC_OFF_LABEL" = "Off";
@@ -182,7 +182,7 @@
 "MODERN_SETTINGS_LAYOUT_TITLE" = "General";
 "MODERN_SETTINGS_MEDIA_SUBTITLE" = "Download videos, enable video timestamps, and more.";
 "MODERN_SETTINGS_MEDIA_TITLE" = "Photos and videos";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "This section is coming soon. Stay tuned for more NeoFreeBird features!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "This section is coming soon. Stay tuned for more 呱呱助手 features!";
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Nothing to see here - yet";
 "MODERN_SETTINGS_PRESETS_SUBTITLE" = "Apply a set of pre-configured settings, or export and import your own.";
 "MODERN_SETTINGS_PRESETS_TITLE" = "Presets";
@@ -240,7 +240,7 @@
 "SETTINGS_EXPORT_TITLE" = "Export settings";
 "SETTINGS_EXPORT_WRITE_FAILED" = "The settings file couldn't be created.";
 "SETTINGS_IMPORT_CONFIRM_BUTTON" = "Choose file";
-"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Your current NeoFreeBird settings will be replaced by the ones in the file you choose.";
+"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Your current 呱呱助手 settings will be replaced by the ones in the file you choose.";
 "SETTINGS_IMPORT_CONFIRM_TITLE" = "Import settings?";
 "SETTINGS_IMPORT_FAILED_TITLE" = "Import failed";
 "SETTINGS_IMPORT_LATER_BUTTON" = "Later";
@@ -248,7 +248,7 @@
 "SETTINGS_IMPORT_SUCCESS_MESSAGE" = "%ld settings were applied. Restart the app for all of them to take effect.";
 "SETTINGS_IMPORT_SUCCESS_TITLE" = "Settings imported";
 "SETTINGS_IMPORT_TITLE" = "Import settings";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "That file isn't a NeoFreeBird settings export.";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "That file isn't a 呱呱助手 settings export.";
 "SETTINGS_TRANSFER_NO_SETTINGS" = "That file didn't contain any settings this version recognises.";
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "That file couldn't be read.";
 "SHARING_DOMAIN_TITLE" = "Sharing domain";

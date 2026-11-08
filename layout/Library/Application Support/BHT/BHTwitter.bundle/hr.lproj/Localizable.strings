@@ -1,9 +1,9 @@
 /*
   Language: hr
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Prilagodi Twitter: ukloni oglase, uključi Blue značajke i više.";
 
 /*Alerts and popups*/
@@ -64,7 +64,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Cool djeca";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Posebna zahvala";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Prati NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Prati 呱呱助手";
 
 /*General*/
 
@@ -346,7 +346,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Ovdje još ništa ne prikazujemo.";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Ovaj odjeljak uskoro stiže. Pratite nas za više NeoFreeBird značajki!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Ovaj odjeljak uskoro stiže. Pratite nas za više 呱呱助手 značajki!";
 
 "SOURCE_UNAVAILABLE" = "Izvor nedostupan";
 
@@ -415,7 +415,7 @@
 "SETTINGS_EXPORT_WRITE_FAILED" = "Datoteka sa postavkama nije mogla biti napravljena.";
 
 "SETTINGS_IMPORT_CONFIRM_TITLE" = "Uvezi postavke?";
-"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Tvoje trenutne NeoFreeBird postavke bit će zamijenjene postavkama iz datoteke koju odabereš.";
+"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "Tvoje trenutne 呱呱助手 postavke bit će zamijenjene postavkama iz datoteke koju odabereš.";
 "SETTINGS_IMPORT_CONFIRM_BUTTON" = "Izaberi datoteku";
 "SETTINGS_IMPORT_FAILED_TITLE" = "Uvoz nije uspio";
 "SETTINGS_IMPORT_SUCCESS_TITLE" = "Postavke uvezene";
@@ -424,7 +424,7 @@
 "SETTINGS_IMPORT_LATER_BUTTON" = "Kasnije";
 
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "Datoteka se nije mogla učitati.";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "Priložena datoteka nije ispravan format NeoFreeBird izvoza postavki.";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "Priložena datoteka nije ispravan format 呱呱助手 izvoza postavki.";
 "SETTINGS_TRANSFER_NO_SETTINGS" = "Priložena datoteka nije sadržavala nikakve postavke koje ova verzija aplikacije prepoznaje.";
 
 /* Common UI Elements & Time Selectors */

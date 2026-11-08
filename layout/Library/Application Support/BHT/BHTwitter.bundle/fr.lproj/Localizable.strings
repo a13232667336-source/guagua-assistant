@@ -1,9 +1,9 @@
 /*
   Language: fr
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Modifie Twitter : cache les pubs, active les options Blue et plus.";
 
 /*Alerts and popups*/
@@ -52,7 +52,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Enfants cool";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "Remerciements spéciaux";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Suivre NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "Suivre 呱呱助手";
 
 /*General*/
 
@@ -266,7 +266,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "Rien à voir ici pour le moment.";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Cette section arrive bientôt. Restez à l'affût pour plus de fonctionnalités NeoFreeBird !";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "Cette section arrive bientôt. Restez à l'affût pour plus de fonctionnalités 呱呱助手 !";
 
 "SOURCE_UNAVAILABLE" = "Source indisponible";
 
@@ -336,8 +336,8 @@
 "SETTINGS_IMPORT_LATER_BUTTON" = "Plus tard";
 
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "Ce fichier n'a pas pu être lu.";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "Ce fichier n'est pas une configuration NeoFreeBird.";
-"SETTINGS_TRANSFER_NO_SETTINGS" = "Ce fichier ne contient aucune configuration que cette version NeoFreeBird puisse reconnaître.";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "Ce fichier n'est pas une configuration 呱呱助手.";
+"SETTINGS_TRANSFER_NO_SETTINGS" = "Ce fichier ne contient aucune configuration que cette version 呱呱助手 puisse reconnaître.";
 
 /* Common UI Elements & Time Selectors */
 "Off" = "Off";

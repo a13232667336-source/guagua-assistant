@@ -1,9 +1,9 @@
 /*
   Language: ar
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "عدّل تويتر: أخفِ الإعلانات، فعّل ميزات Blue، والمزيد.";
 
 /*Alerts and popups*/
@@ -65,7 +65,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "المميزون";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "شكر خاص";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "تابع NeoFreeBird";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "تابع 呱呱助手";
 
 /*General*/
 
@@ -357,7 +357,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "لا محتوى هنا بعد";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "هذا القسم قادم قريبًا. ترقّب المزيد من ميزات NeoFreeBird!";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "هذا القسم قادم قريبًا. ترقّب المزيد من ميزات 呱呱助手!";
 
 "SOURCE_UNAVAILABLE" = "المصدر غير متوفر";
 
@@ -431,7 +431,7 @@
 "SETTINGS_EXPORT_WRITE_FAILED" = "تعذّر إنشاء ملف الإعدادات.";
 
 "SETTINGS_IMPORT_CONFIRM_TITLE" = "استيراد الإعدادات؟";
-"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "ستُستبدل إعدادات NeoFreeBird الحالية بالإعدادات الموجودة في الملف الذي تختاره.";
+"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "ستُستبدل إعدادات 呱呱助手 الحالية بالإعدادات الموجودة في الملف الذي تختاره.";
 "SETTINGS_IMPORT_CONFIRM_BUTTON" = "اختيار ملف";
 "SETTINGS_IMPORT_FAILED_TITLE" = "تعذّر الاستيراد";
 "SETTINGS_IMPORT_SUCCESS_TITLE" = "استُوردت الإعدادات";
@@ -440,7 +440,7 @@
 "SETTINGS_IMPORT_LATER_BUTTON" = "لاحقًا";
 
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "تعذّرت قراءة الملف.";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "الملف ليس ملف إعدادات مصدّرًا من NeoFreeBird.";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "الملف ليس ملف إعدادات مصدّرًا من 呱呱助手.";
 "SETTINGS_TRANSFER_NO_SETTINGS" = "لا يحتوي الملف على إعدادات يتعرف عليها هذا الإصدار.";
 
 /* Common UI Elements & Time Selectors */

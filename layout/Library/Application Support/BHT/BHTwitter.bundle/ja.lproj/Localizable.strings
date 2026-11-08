@@ -1,9 +1,9 @@
 /*
   Language: ja
-  NeoFreeBird
+  呱呱助手
 */
 
-"NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_TITLE" = "呱呱助手";
 "NFB_SETTINGS_DETAIL" = "Xをカスタマイズできます。広告の非表示や表示項目の変更など、さまざまな設定を利用できます。";
 
 /*Alerts and popups*/
@@ -64,7 +64,7 @@
 
 "COOL_KIDS_SECTION_HEADER_TITLE" = "Cool kids";
 "SPECIAL_THANKS_SECTION_HEADER_TITLE" = "特別な感謝";
-"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "NeoFreeBirdをフォロー";
+"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE" = "呱呱助手をフォロー";
 
 /*General*/
 
@@ -346,7 +346,7 @@
 
 /*Deprecated*/
 "MODERN_SETTINGS_PLACEHOLDER_TEXT" = "ここには何もありません — 今はまだ。";
-"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "このセクションは近日公開予定です。NeoFreeBirdの今後の機能にご期待ください！";
+"MODERN_SETTINGS_PLACEHOLDER_DETAIL_TEXT" = "このセクションは近日公開予定です。呱呱助手の今後の機能にご期待ください！";
 
 "SOURCE_UNAVAILABLE" = "ソースを利用できません";
 
@@ -415,7 +415,7 @@
 "SETTINGS_EXPORT_WRITE_FAILED" = "設定ファイルを作成できませんでした。";
 
 "SETTINGS_IMPORT_CONFIRM_TITLE" = "設定をインポートしますか？";
-"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "現在の NeoFreeBird の設定が置き換えられます。";
+"SETTINGS_IMPORT_CONFIRM_MESSAGE" = "現在の 呱呱助手 の設定が置き換えられます。";
 "SETTINGS_IMPORT_CONFIRM_BUTTON" = "ファイルを選択";
 "SETTINGS_IMPORT_FAILED_TITLE" = "インポートに失敗しました";
 "SETTINGS_IMPORT_SUCCESS_TITLE" = "設定をインポートしました";
@@ -424,7 +424,7 @@
 "SETTINGS_IMPORT_LATER_BUTTON" = "あとで";
 
 "SETTINGS_TRANSFER_UNREADABLE_FILE" = "ファイルを読み込めませんでした。";
-"SETTINGS_TRANSFER_MALFORMED_FILE" = "このファイルは NeoFreeBird の設定エクスポートファイルではありません。";
+"SETTINGS_TRANSFER_MALFORMED_FILE" = "このファイルは 呱呱助手 の設定エクスポートファイルではありません。";
 "SETTINGS_TRANSFER_NO_SETTINGS" = "このファイルには、このバージョンで認識できる設定が含まれていませんでした。";
 
 /* Common UI Elements & Time Selectors */
