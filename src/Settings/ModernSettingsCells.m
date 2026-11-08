@@ -64,7 +64,7 @@
 - (void)setupConstraints {
     [NSLayoutConstraint activateConstraints:@[
         [self.iconImageView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
-                                                         constant:26],
+                                                         constant:34],
         [self.iconImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
         [self.iconImageView.widthAnchor constraintEqualToConstant:36],
         [self.iconImageView.heightAnchor constraintEqualToConstant:36],
@@ -372,7 +372,7 @@
             [self.toggleSwitch.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
                                                              constant:-34],
             [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
-                                                          constant:26],
+                                                          constant:34],
             [self.titleLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor
                                                       constant:14],
             [self.titleLabel.trailingAnchor constraintEqualToAnchor:self.toggleSwitch.leadingAnchor
