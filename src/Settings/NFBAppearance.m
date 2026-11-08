@@ -4,6 +4,8 @@
 //
 
 #import "Settings/NFBAppearance.h"
+#import <objc/runtime.h>
+#import <QuartzCore/QuartzCore.h>
 
 static const void* kNFBCardViewKey = &kNFBCardViewKey;
 
