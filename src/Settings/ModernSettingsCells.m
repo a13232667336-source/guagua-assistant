@@ -156,7 +156,6 @@
         [self setupViews];
         [self setupConstraints];
         NFBPrepareCardCell(self);
-        NFBStyleIconChip(self.iconImageView, NFBAccentColor());
     }
     return self;
 }
@@ -242,7 +241,6 @@
         [self setupViews];
         [self setupConstraints];
         NFBPrepareCardCell(self);
-        NFBStyleIconChip(self.iconImageView, NFBAccentColor());
     }
     return self;
 }
