@@ -6,6 +6,8 @@
 //
 
 #import "Settings/ModernSettingsViewController.h"
+#import "Settings/NFBAppearance.h"
+#import "Core/NFBEmbedded.h"
 #import "Core/BHTBundle.h"
 #import "Core/NFBEmbedded.h"
 #import "Core/BHTManager.h"
@@ -28,13 +30,47 @@
 
 #pragma mark - Section Headers
 
+- (UIView*)brandHeaderView {
+    UIView* header = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 88)];
+    header.backgroundColor = [UIColor clearColor];
+
+    UIImageView* avatar = [[UIImageView alloc] initWithImage:NFBEmbeddedAvatar()];
+    avatar.translatesAutoresizingMaskIntoConstraints = NO;
+    avatar.contentMode = UIViewContentModeScaleAspectFill;
+    avatar.layer.cornerRadius = 16.0;
+    avatar.layer.cornerCurve = kCACornerCurveContinuous;
+    avatar.clipsToBounds = YES;
+    [header addSubview:avatar];
+
+    UILabel* name = [[UILabel alloc] init];
+    name.translatesAutoresizingMaskIntoConstraints = NO;
+    name.text = [[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"];
+    name.font = [UIFont systemFontOfSize:22.0 weight:UIFontWeightBold];
+    name.textColor = [UIColor labelColor];
+    [header addSubview:name];
+
+    [NSLayoutConstraint activateConstraints:@[
+        [avatar.leadingAnchor constraintEqualToAnchor:header.leadingAnchor constant:20],
+        [avatar.centerYAnchor constraintEqualToAnchor:header.centerYAnchor],
+        [avatar.widthAnchor constraintEqualToConstant:48],
+        [avatar.heightAnchor constraintEqualToConstant:48],
+        [name.leadingAnchor constraintEqualToAnchor:avatar.trailingAnchor constant:14],
+        [name.centerYAnchor constraintEqualToAnchor:header.centerYAnchor],
+        [name.trailingAnchor constraintEqualToAnchor:header.trailingAnchor constant:-20]
+    ]];
+    return header;
+}
+
 - (UIView*)tableView:(UITableView*)tableView viewForHeaderInSection:(NSInteger)section {
+    if (section == 0) {
+        return [self brandHeaderView];
+    }
     if (section == 1) {
         return [self headerViewWithTitle:[[BHTBundle sharedBundle]
                                              localizedStringForKey:@"DEVELOPER_SECTION_HEADER_TITLE"]];
     }
     UIView* spacer = [[UIView alloc] init];
-    spacer.backgroundColor = [Palette currentBackgroundColor];
+    spacer.backgroundColor = [UIColor clearColor];
     return spacer;
 }
 
@@ -73,10 +109,13 @@
 }
 
 - (CGFloat)tableView:(UITableView*)tableView heightForHeaderInSection:(NSInteger)section {
-    if (section == 1) {
-        return UITableViewAutomaticDimension;
+    if (section == 0) {
+        return 88.0;
     }
-    return 8.0;
+    if (section == 1) {
+        return 44.0;
+    }
+    return 6.0;
 }
 
 #pragma mark - Section Footers
@@ -165,6 +204,7 @@
 
 - (void)setupNavigationBar {
     self.view.backgroundColor = [Palette currentBackgroundColor];
+    NFBInstallGradientBackground(self.view);
     if (self.account) {
         self.navigationItem.titleView = [objc_getClass("TFNTitleView")
             titleViewWithTitle:[[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"]
@@ -179,7 +219,7 @@
     self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
-    self.tableView.backgroundColor = [Palette currentBackgroundColor];
+    self.tableView.backgroundColor = [UIColor clearColor];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.tableView.estimatedRowHeight = 80;
     self.tableView.rowHeight = UITableViewAutomaticDimension;

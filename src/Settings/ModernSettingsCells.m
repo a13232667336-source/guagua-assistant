@@ -6,6 +6,7 @@
 //
 
 #import "Settings/ModernSettingsCells.h"
+#import "Settings/NFBAppearance.h"
 #import "Core/BHTManager.h"
 #import "Headers/TWHeaders.h"
 #import "ThemeColor/Palette.h"
@@ -18,8 +19,14 @@
     if (self) {
         [self setupViews];
         [self setupConstraints];
+        NFBPrepareCardCell(self);
     }
     return self;
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    NFBLayoutCardCell(self);
 }
 
 - (void)setupViews {
@@ -32,13 +39,14 @@
     self.titleLabel = [[UILabel alloc] init];
     self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
     id fontGroup = [BHTManager sharedFontGroup];
-    self.titleLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
+    self.titleLabel.font = [UIFont systemFontOfSize:16.5 weight:UIFontWeightSemibold];
     self.titleLabel.textColor = [UIColor labelColor];
+    self.titleLabel.adjustsFontForContentSizeCategory = YES;
     [self.contentView addSubview:self.titleLabel];
 
     self.subtitleLabel = [[UILabel alloc] init];
     self.subtitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    self.subtitleLabel.font = [fontGroup performSelector:@selector(subtext2Font)];
+    self.subtitleLabel.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
     [self updateSubtitleColor];
     self.subtitleLabel.numberOfLines = 0;
     [self.contentView addSubview:self.subtitleLabel];
@@ -131,8 +139,8 @@
     if (previousTraitCollection.preferredContentSizeCategory !=
         self.traitCollection.preferredContentSizeCategory) {
         id fontGroup = [BHTManager sharedFontGroup];
-        self.titleLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
-        self.subtitleLabel.font = [fontGroup performSelector:@selector(subtext2Font)];
+        self.titleLabel.font = [UIFont systemFontOfSize:16.5 weight:UIFontWeightSemibold];
+        self.subtitleLabel.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
     }
 }
 
@@ -146,16 +154,23 @@
     if (self) {
         [self setupViews];
         [self setupConstraints];
+        NFBPrepareCardCell(self);
     }
     return self;
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    NFBLayoutCardCell(self);
 }
 
 - (void)setupViews {
     self.titleLabel = [[UILabel alloc] init];
     self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
     id fontGroup = [BHTManager sharedFontGroup];
-    self.titleLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
+    self.titleLabel.font = [UIFont systemFontOfSize:16.5 weight:UIFontWeightSemibold];
     self.titleLabel.textColor = [UIColor labelColor];
+    self.titleLabel.adjustsFontForContentSizeCategory = YES;
     [self.contentView addSubview:self.titleLabel];
 
     self.chevronImageView = [[UIImageView alloc] init];
@@ -210,7 +225,7 @@
     if (previousTraitCollection.preferredContentSizeCategory !=
         self.traitCollection.preferredContentSizeCategory) {
         id fontGroup = [BHTManager sharedFontGroup];
-        self.titleLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
+        self.titleLabel.font = [UIFont systemFontOfSize:16.5 weight:UIFontWeightSemibold];
     }
 }
 
@@ -224,21 +239,28 @@
     if (self) {
         [self setupViews];
         [self setupConstraints];
+        NFBPrepareCardCell(self);
     }
     return self;
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    NFBLayoutCardCell(self);
 }
 
 - (void)setupViews {
     self.titleLabel = [[UILabel alloc] init];
     self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
     id fontGroup = [BHTManager sharedFontGroup];
-    self.titleLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
+    self.titleLabel.font = [UIFont systemFontOfSize:16.5 weight:UIFontWeightSemibold];
     self.titleLabel.textColor = [UIColor labelColor];
+    self.titleLabel.adjustsFontForContentSizeCategory = YES;
     [self.contentView addSubview:self.titleLabel];
 
     self.subtitleLabel = [[UILabel alloc] init];
     self.subtitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    self.subtitleLabel.font = [fontGroup performSelector:@selector(subtext2Font)];
+    self.subtitleLabel.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
     self.subtitleLabel.textAlignment = NSTextAlignmentRight;
     [self updateSubtitleColor];
     [self.contentView addSubview:self.subtitleLabel];
@@ -317,8 +339,8 @@
     if (previousTraitCollection.preferredContentSizeCategory !=
         self.traitCollection.preferredContentSizeCategory) {
         id fontGroup = [BHTManager sharedFontGroup];
-        self.titleLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
-        self.subtitleLabel.font = [fontGroup performSelector:@selector(subtext2Font)];
+        self.titleLabel.font = [UIFont systemFontOfSize:16.5 weight:UIFontWeightSemibold];
+        self.subtitleLabel.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
     }
 }
 
@@ -331,7 +353,7 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
-        self.backgroundColor = [Palette currentBackgroundColor];
+        self.backgroundColor = [UIColor clearColor];
         self.titleLabel = [UILabel new];
         self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:self.titleLabel];
@@ -342,7 +364,9 @@
         self.toggleSwitch = [UISwitch new];
         self.toggleSwitch.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:self.toggleSwitch];
+        self.toggleSwitch.onTintColor = [UIColor systemGreenColor];
         [self applyTheme];
+        NFBPrepareCardCell(self);
         [NSLayoutConstraint activateConstraints:@[
             [self.toggleSwitch.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
                                                              constant:-20],
@@ -373,10 +397,15 @@
     [self.toggleSwitch addTarget:target action:action forControlEvents:events];
 }
 
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    NFBLayoutCardCell(self);
+}
+
 - (void)applyTheme {
     id fontGroup = [BHTManager sharedFontGroup];
-    self.titleLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
-    self.subtitleLabel.font = [fontGroup performSelector:@selector(subtext2Font)];
+    self.titleLabel.font = [UIFont systemFontOfSize:16.5 weight:UIFontWeightSemibold];
+    self.subtitleLabel.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
     Class TAEColorSettingsCls = objc_getClass("TAEColorSettings");
     id settings = [TAEColorSettingsCls sharedSettings];
     id colorPalette = [[settings currentColorPalette] colorPalette];

@@ -6,6 +6,7 @@
 //
 
 #import "Settings/ModernSettingsPageViewController.h"
+#import "Settings/NFBAppearance.h"
 #import "Core/BHTBundle.h"
 #import "Core/BHTManager.h"
 #import "Core/BHTSettings.h"
@@ -74,13 +75,14 @@
 
 - (void)setupTable {
     self.view.backgroundColor = [Palette currentBackgroundColor];
+    NFBInstallGradientBackground(self.view);
     self.tableView = [[UITableView alloc] initWithFrame:self.view.bounds
                                                   style:UITableViewStyleGrouped];
     self.tableView.autoresizingMask =
         UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
-    self.tableView.backgroundColor = [Palette currentBackgroundColor];
+    self.tableView.backgroundColor = [UIColor clearColor];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     self.tableView.showsVerticalScrollIndicator = NO;
