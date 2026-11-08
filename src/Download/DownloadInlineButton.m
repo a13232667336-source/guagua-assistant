@@ -124,21 +124,15 @@ static UIViewController* TopMostController(void) {
                 }
                 withLogCallback:nil
                 withStatisticsCallback:^(Statistics* statistics) {
-                    NSString* detail;
-                    if (durationMs > 0) {
-                        detail = [BHTManager
-                            getDownloadingPercent:MIN([statistics getTime] / durationMs,
-                                                      1.0)];
-                    } else if ([statistics getSize] > 0) {
-                        detail = [NSByteCountFormatter
-                            stringFromByteCount:[statistics getSize]
-                                     countStyle:NSByteCountFormatterCountStyleFile];
-                    } else {
-                        return;
-                    }
-                    CGFloat progress = durationMs > 0 ? (CGFloat)([statistics getTime] / durationMs)
-                                                      : 0.0;
-                    [[NFBProgressBar shared] setProgress:progress detail:detail];
+                    double processed = [statistics getTime];
+                    long long bytes = [statistics getSize];
+                    CGFloat progress = durationMs > 0 ? (CGFloat)(processed / durationMs) : 0.0;
+                    NSString* sizeText = bytes > 0
+                                             ? [NSByteCountFormatter
+                                                   stringFromByteCount:bytes
+                                                            countStyle:NSByteCountFormatterCountStyleFile]
+                                             : nil;
+                    [[NFBProgressBar shared] setProgress:progress detail:sizeText];
                 }];
         };
 
