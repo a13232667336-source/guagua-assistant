@@ -64,7 +64,7 @@
 - (void)setupConstraints {
     [NSLayoutConstraint activateConstraints:@[
         [self.iconImageView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
-                                                         constant:14],
+                                                         constant:20],
         [self.iconImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
         [self.iconImageView.widthAnchor constraintEqualToConstant:36],
         [self.iconImageView.heightAnchor constraintEqualToConstant:36],
@@ -84,7 +84,7 @@
                                                         constant:-16],
 
         [self.chevronImageView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
-                                                             constant:-18],
+                                                             constant:-26],
         [self.chevronImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
         [self.chevronImageView.widthAnchor constraintEqualToConstant:15],
         [self.chevronImageView.heightAnchor constraintEqualToConstant:15]
@@ -197,7 +197,7 @@
                                                      constant:-16],
 
         [self.chevronImageView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
-                                                             constant:-18],
+                                                             constant:-26],
         [self.chevronImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
         [self.chevronImageView.widthAnchor constraintEqualToConstant:15],
         [self.chevronImageView.heightAnchor constraintEqualToConstant:15]
@@ -294,7 +294,7 @@
         [self.subtitleLabel.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
 
         [self.chevronImageView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
-                                                             constant:-18],
+                                                             constant:-26],
         [self.chevronImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
         [self.chevronImageView.widthAnchor constraintEqualToConstant:15],
         [self.chevronImageView.heightAnchor constraintEqualToConstant:15]
@@ -370,9 +370,9 @@
         NFBPrepareCardCell(self);
         [NSLayoutConstraint activateConstraints:@[
             [self.toggleSwitch.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
-                                                             constant:-18],
+                                                             constant:-26],
             [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
-                                                          constant:18],
+                                                          constant:22],
             [self.titleLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor
                                                       constant:14],
             [self.titleLabel.trailingAnchor constraintEqualToAnchor:self.toggleSwitch.leadingAnchor
