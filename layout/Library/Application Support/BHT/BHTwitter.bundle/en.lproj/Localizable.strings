@@ -85,7 +85,7 @@
 "DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING" = "Downloading";
 "DOWNLOAD_MENU_TITLE" = "\nChoose video quality";
 "DOWNLOAD_VIDEOS_DETAIL" = "Save videos or GIFs right from the Tweet overflow menu.";
-"DOWNLOAD_VIDEOS_TITLE" = "Download media";
+"DOWNLOAD_VIDEOS_TITLE" = "Download video (呱呱助手)";
 "DOWNLOAD_VIDEO_NUMBER_TITLE" = "Video %lu";
 "DOWNLOAD_VOICE_MESSAGES_DETAIL" = "Save voice messages to your device after playing them (long-press on an audio message with 2 fingers to download it).";
 "DOWNLOAD_VOICE_MESSAGES_TITLE" = "Download voice messages";

@@ -100,12 +100,13 @@
                                 withConfiguration:[UIImageSymbolConfiguration
                                                       configurationWithPointSize:20.0]]];
     tick.tintColor = [UIColor systemGreenColor];
-    tick.frame = CGRectMake(18.0, 9.0, 20.0, 20.0);
+    tick.frame = CGRectMake(16.0, 12.0, 20.0, 20.0);
     tick.contentMode = UIViewContentModeScaleAspectFit;
     [successGroup addSubview:tick];
 
-    UILabel* done = [[UILabel alloc] initWithFrame:CGRectMake(46.0, 0.0, width - 60.0, 38.0)];
+    UILabel* done = [[UILabel alloc] initWithFrame:CGRectMake(0.0, 0.0, 200.0, 44.0)];
     done.text = @"下载完成";
+    done.textAlignment = NSTextAlignmentCenter;
     done.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
     done.textColor = [UIColor whiteColor];
     [successGroup addSubview:done];
@@ -230,12 +231,14 @@
     self.container.layer.cornerRadius = 14.0;
     self.progressGroup.hidden = YES;
     self.successGroup.hidden = NO;
+    CGFloat capsuleWidth = CGRectGetWidth(self.container.bounds);
     for (UIView* sub in self.successGroup.subviews) {
         if ([sub isKindOfClass:[UILabel class]]) {
             ((UILabel*)sub).text = text.length ? text : @"下载完成";
-            sub.frame = CGRectMake(46.0, 0.0, 140.0, 44.0);
+            ((UILabel*)sub).textAlignment = NSTextAlignmentCenter;
+            sub.frame = CGRectMake(0.0, 0.0, capsuleWidth, 44.0);
         } else {
-            sub.frame = CGRectMake(18.0, 12.0, 20.0, 20.0);
+            sub.frame = CGRectMake(14.0, 12.0, 20.0, 20.0);
         }
     }
 

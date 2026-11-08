@@ -80,7 +80,7 @@
 "DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING" = "下载中";
 "DOWNLOAD_MENU_TITLE" = "\n选择视频画质";
 "DOWNLOAD_VIDEOS_DETAIL" = "直接从推文中保存视频或 GIF。";
-"DOWNLOAD_VIDEOS_TITLE" = "下载媒体";
+"DOWNLOAD_VIDEOS_TITLE" = "下载视频（呱呱助手）";
 "DOWNLOAD_VIDEO_NUMBER_TITLE" = "视频 %lu";
 "DOWNLOAD_VOICE_MESSAGES_DETAIL" = "播放后可将语音消息保存到设备（用两根手指长按音频消息即可下载）。";
 "DOWNLOAD_VOICE_MESSAGES_TITLE" = "下载语音消息";
