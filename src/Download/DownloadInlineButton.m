@@ -7,6 +7,7 @@
 //
 
 #import "Download/DownloadInlineButton.h"
+#import "Download/NFBProgressBar.h"
 #import <objc/runtime.h>
 #import "Core/BHTBundle.h"
 #import "Core/BHTSettings.h"
@@ -34,7 +35,6 @@ static UIViewController* TopMostController(void) {
 
 #pragma mark - DownloadInlineButton
 @interface DownloadInlineButton ()
-@property (nonatomic, strong) TFNHUD* hud;
 @end
 
 @implementation DownloadInlineButton
@@ -55,11 +55,10 @@ static UIViewController* TopMostController(void) {
                  activeRanges:nil];
 
         void (^showHUD)(NSString*) = ^(NSString* text) {
-            self.hud = [[objc_getClass("TFNHUD") alloc] initWithText:text];
-            [self.hud show];
+            [[NFBProgressBar shared] showWithTitle:text];
         };
         void (^dismissHUD)(void) = ^{
-            [self.hud hide];
+            [[NFBProgressBar shared] hide];
         };
 
         // Every download runs through FFmpeg: plain mp4s are stream-copied,
@@ -137,11 +136,9 @@ static UIViewController* TopMostController(void) {
                     } else {
                         return;
                     }
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self.hud
-                            setText:[NSString stringWithFormat:@"%@ %@", downloadingText,
-                                                               detail]];
-                    });
+                    CGFloat progress = durationMs > 0 ? (CGFloat)([statistics getTime] / durationMs)
+                                                      : 0.0;
+                    [[NFBProgressBar shared] setProgress:progress detail:detail];
                 }];
         };
 

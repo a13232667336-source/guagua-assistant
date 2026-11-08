@@ -7,6 +7,7 @@
 
 #import "Settings/ModernSettingsViewController.h"
 #import "Core/BHTBundle.h"
+#import "Core/NFBEmbedded.h"
 #import "Core/BHTManager.h"
 #import "Settings/ModernSettingsCells.h"
 #import "Settings/ModernSettingsPageViewController.h"
@@ -28,59 +29,13 @@
 #pragma mark - Section Headers
 
 - (UIView*)tableView:(UITableView*)tableView viewForHeaderInSection:(NSInteger)section {
-    if (section == 0) {
-        UIView* headerView = [[UIView alloc] init];
-        headerView.backgroundColor = [Palette currentBackgroundColor];
-
-        UILabel* subtitleLabel = [[UILabel alloc] init];
-        subtitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        subtitleLabel.text = [[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_DETAIL"];
-        subtitleLabel.numberOfLines = 0;
-        subtitleLabel.textAlignment = NSTextAlignmentLeft;
-
-        id fontGroup = [BHTManager sharedFontGroup];
-        subtitleLabel.font = [fontGroup performSelector:@selector(subtext2Font)];
-
-        Class TAEColorSettingsCls = objc_getClass("TAEColorSettings");
-        id settings = [TAEColorSettingsCls sharedSettings];
-        id currentPalette = [settings currentColorPalette];
-        id colorPalette = [currentPalette colorPalette];
-        UIColor* subtitleColor = [colorPalette performSelector:@selector(tabBarItemColor)];
-        subtitleLabel.textColor = subtitleColor;
-
-        [headerView addSubview:subtitleLabel];
-
-        [NSLayoutConstraint activateConstraints:@[
-            [subtitleLabel.leadingAnchor constraintEqualToAnchor:headerView.leadingAnchor
-                                                        constant:20],
-            [subtitleLabel.trailingAnchor constraintEqualToAnchor:headerView.trailingAnchor
-                                                         constant:-20],
-            [subtitleLabel.topAnchor constraintEqualToAnchor:headerView.topAnchor
-                                                    constant:16],
-            [subtitleLabel.bottomAnchor constraintEqualToAnchor:headerView.bottomAnchor
-                                                       constant:-16]
-        ]];
-
-        return headerView;
-    } else if (section == 1) {
+    if (section == 1) {
         return [self headerViewWithTitle:[[BHTBundle sharedBundle]
                                              localizedStringForKey:@"DEVELOPER_SECTION_HEADER_TITLE"]];
-    } else if (section == 2) {
-        return [self headerViewWithTitle:[[BHTBundle sharedBundle]
-                                             localizedStringForKey:@"COOL_KIDS_SECTION_HEADER_TITLE"]];
-    } else if (section == 3) {
-        return [self
-            headerViewWithTitle:[[BHTBundle sharedBundle]
-                                    localizedStringForKey:@"SPECIAL_THANKS_SECTION_HEADER_TITLE"]];
-    } else if (section == 4) {
-        return [self headerViewWithTitle:[[BHTBundle sharedBundle]
-                                             localizedStringForKey:@"CONTRIBUTOR_PAGE_SECTION_HEADER_TITLE"]];
-    } else if (section == 5) {
-        return [self headerViewWithTitle:
-                         [[BHTBundle sharedBundle]
-                             localizedStringForKey:@"FOLLOW_OFFICIAL_PAGE_SECTION_HEADER_TITLE"]];
     }
-    return nil;
+    UIView* spacer = [[UIView alloc] init];
+    spacer.backgroundColor = [Palette currentBackgroundColor];
+    return spacer;
 }
 
 - (UIView*)headerViewWithTitle:(NSString*)title {
@@ -118,11 +73,10 @@
 }
 
 - (CGFloat)tableView:(UITableView*)tableView heightForHeaderInSection:(NSInteger)section {
-    if (section == 0 || section == 1 || section == 2 || section == 3 || section == 4 ||
-        section == 5) {
+    if (section == 1) {
         return UITableViewAutomaticDimension;
     }
-    return 0;
+    return 8.0;
 }
 
 #pragma mark - Section Footers
@@ -179,85 +133,15 @@
 }
 
 - (void)setupDeveloperCells {
-    self.developerCells = @[
-        @{
-            @"title": @"aridan",
-            @"username": @"actuallyaridan",
-            @"avatarURL": @"https://unavatar.io/x/actuallyaridan?fallback=https://neofreebird.com/"
-                          @"images/actuallyaridan.png",
-            @"userID": @"1351218086649720837"
-        },
-        @{
-            @"title": @"Thea 🐾",
-            @"username": @"nyaathea",
-            @"avatarURL": @"https://unavatar.io/github/nyathea?fallback=https://neofreebird.com/images/"
-                          @"theameoww.png",
-            @"userID": @"1541742676009226241"
-        },
-        @{
-            @"title": @"OrionBlur",
-            @"username": @"orionblur",
-            @"avatarURL": @"https://unavatar.io/x/orionblur",
-            @"userID": @"2023606533255540736"
-        },
-        @{
-            @"title": @"timi2506",
-            @"username": @"timi2506",
-            @"avatarURL": @"https://unavatar.io/github/timi2506?fallback=https://neofreebird.com/images/"
-                          @"timi2506.png",
-            @"userID": @"1684856685486063616"
-        }
-    ];
-
-    self.coolKidsCells = @[
-        @{
-            @"title": @"Eevee",
-            @"username": @"whoeevee1",
-            @"avatarURL": @"https://unavatar.io/github/whoeevee?fallback=https://neofreebird.com/images/"
-                          @"whoeevee.png",
-            @"userID": @"1547956497342115844"
-        },
-        @{
-            @"title": @"zxcvbn",
-            @"username": @"zxxvbn0",
-            @"avatarURL":
-                @"https://unavatar.io/x/zxxvbn0?fallback=https://neofreebird.com/images/zxxvbn0.png",
-            @"userID": @"1678444396717514760"
-        }
-    ];
-
-    self.specialThanksCells = @[
-        @{
-            @"title": @"BandarHelal",
-            @"username": @"BandarHL",
-            @"avatarURL":
-                @"https://unavatar.io/x/BandarHL?fallback=https://neofreebird.com/images/BandarHL.png",
-            @"userID": @"827842200708853762"
-        },
-        @{
-            @"title": @"YouGottaBillieve",
-            @"username": @"ugottabillieve",
-            @"avatarURL": @"https://unavatar.io/x/ugottabillieve?fallback=https://neofreebird.com/"
-                          @"images/ugottabillieve.png",
-            @"userID": @"1616194182187732992"
-        }
-    ];
-    self.contributorCells = @[
-        @{
-            @"title": @"matt sephton",
-            @"username": @"gingerbeardman",
-            @"avatarURL": @"https://unavatar.io/x/gingerbeardman",
-            @"userID": @"40743"
-        }
-    ];
-
-    self.officialPageCells = @[@{
-        @"title": @"NeoFreeBird",
-        @"username": @"NeoFreeBird",
-        @"avatarURL": @"https://unavatar.io/x/NeoFreeBird?fallback=https://neofreebird.com/images/"
-                      @"NeoFreeBird.png",
-        @"userID": @"1878595268255297537"
-    }];
+    self.developerCells = @[ @{
+        @"title" : @"Samuel",
+        @"role" : @"开发者",
+        @"avatarEmbedded" : @YES
+    } ];
+    self.coolKidsCells = @[];
+    self.specialThanksCells = @[];
+    self.contributorCells = @[];
+    self.officialPageCells = @[];
 }
 
 - (void)viewDidLoad {
@@ -382,7 +266,7 @@
 #pragma mark - UITableViewDataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView*)tableView {
-    return 6;
+    return 2;
 }
 
 - (NSInteger)tableView:(UITableView*)tableView numberOfRowsInSection:(NSInteger)section {
@@ -390,14 +274,6 @@
         return self.sections.count;
     } else if (section == 1) {
         return self.developerCells.count;
-    } else if (section == 2) {
-        return self.coolKidsCells.count;
-    } else if (section == 3) {
-        return self.specialThanksCells.count;
-    } else if (section == 4) {
-        return self.contributorCells.count;
-    } else if (section == 5) {
-        return self.officialPageCells.count;
     }
     return 0;
 }
@@ -416,22 +292,6 @@
         return [self developerCellForTableView:tableView
                                    atIndexPath:indexPath
                                      fromArray:self.developerCells];
-    } else if (indexPath.section == 2) {
-        return [self developerCellForTableView:tableView
-                                   atIndexPath:indexPath
-                                     fromArray:self.coolKidsCells];
-    } else if (indexPath.section == 3) {
-        return [self developerCellForTableView:tableView
-                                   atIndexPath:indexPath
-                                     fromArray:self.specialThanksCells];
-    } else if (indexPath.section == 4) {
-        return [self developerCellForTableView:tableView
-                                   atIndexPath:indexPath
-                                     fromArray:self.contributorCells];
-    } else if (indexPath.section == 5) {
-        return [self developerCellForTableView:tableView
-                                   atIndexPath:indexPath
-                                     fromArray:self.officialPageCells];
     }
 
     return nil;
@@ -522,13 +382,21 @@
     nameLabel.text = developer[@"title"];
     nameLabel.font = [fontGroup performSelector:@selector(bodyBoldFont)];
     nameLabel.textColor = textColor;
-    usernameLabel.text = [NSString stringWithFormat:@"@%@", developer[@"username"]];
+    NSString* role = developer[@"role"];
+    if (role.length == 0) {
+        role = [NSString stringWithFormat:@"@%@", developer[@"username"] ?: @""];
+    }
+    usernameLabel.text = role;
     usernameLabel.font = [fontGroup performSelector:@selector(subtext2Font)];
     usernameLabel.textColor = subtitleColor;
     UIImageView* devChevron = [cell.contentView viewWithTag:103];
     devChevron.image = [UIImage tfn_vectorImageNamed:@"chevron_right"
                                             fitsSize:CGSizeMake(18, 18)
                                            fillColor:subtitleColor];
+    if ([developer[@"avatarEmbedded"] boolValue]) {
+        avatarImageView.image = NFBEmbeddedAvatar() ?: [UIImage systemImageNamed:@"person.circle.fill"];
+        return;
+    }
     NSString* avatarURL = developer[@"avatarURL"];
     if (avatarURL.length > 0) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -560,19 +428,7 @@
     } else if (indexPath.section == 1) {
         NSDictionary* developer = self.developerCells[indexPath.row];
         [self openTwitterProfileWithUserID:developer[@"userID"]];
-    } else if (indexPath.section == 2) {
-        NSDictionary* developer = self.coolKidsCells[indexPath.row];
-        [self openTwitterProfileWithUserID:developer[@"userID"]];
-    } else if (indexPath.section == 3) {
-        NSDictionary* developer = self.specialThanksCells[indexPath.row];
-        [self openTwitterProfileWithUserID:developer[@"userID"]];
-    } else if (indexPath.section == 4) {
-        NSDictionary* developer = self.contributorCells[indexPath.row];
-        [self openTwitterProfileWithUserID:developer[@"userID"]];
-    } else if (indexPath.section == 5) {
-        NSDictionary* developer = self.officialPageCells[indexPath.row];
-        [self openTwitterProfileWithUserID:developer[@"userID"]];
-    }
+        }
 }
 
 - (void)openTwitterProfileWithUserID:(NSString*)userID {
