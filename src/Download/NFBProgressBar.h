@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)showWithTitle:(NSString*)title;
 - (void)setProgress:(CGFloat)progress detail:(nullable NSString*)detail;
+- (void)showSuccessWithText:(NSString*)text;
 - (void)hide;
 
 @end

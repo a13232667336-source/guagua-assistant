@@ -89,6 +89,10 @@ static UIViewController* TopMostController(void) {
                         if ([ReturnCode isSuccess:returnCode]) {
                             if (![BHTSettings boolForKey:@"direct_save"]) {
                                 [BHTManager showSaveVC:outFile];
+                                [[NFBProgressBar shared]
+                                    showSuccessWithText:
+                                        [[BHTBundle sharedBundle]
+                                            localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"]];
                             } else {
                                 [feedback
                                     notificationOccurred:UINotificationFeedbackTypeSuccess];
@@ -96,6 +100,10 @@ static UIViewController* TopMostController(void) {
                                     [BHTManager saveGIF:outFile];
                                 else
                                     [BHTManager save:outFile];
+                                [[NFBProgressBar shared]
+                                    showSuccessWithText:
+                                        [[BHTBundle sharedBundle]
+                                            localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"]];
                             }
                         } else {
                             [feedback notificationOccurred:UINotificationFeedbackTypeError];

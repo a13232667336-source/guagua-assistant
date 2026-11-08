@@ -79,6 +79,7 @@
 "DOWNLOAD_ALL_VIDEOS_TITLE" = "Download all videos";
 "DOWNLOAD_AS_GIF_OPTION_TITLE" = "Download as GIF";
 "DOWNLOAD_AS_MP4_OPTION_TITLE" = "Download as MP4";
+"DOWNLOAD_COMPLETE_TITLE" = "Download complete";
 "DOWNLOAD_HIGHEST_QUALITY_DETAIL" = "Skip the quality picker and save the best MP4 straight away.";
 "DOWNLOAD_HIGHEST_QUALITY_TITLE" = "Always download highest quality";
 "DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING" = "Downloading";

@@ -122,36 +122,59 @@
     self.sweepTimer = nil;
 }
 
-#pragma mark - Public
 
-- (void)showWithTitle:(NSString*)title {
-    [self buildIfNeeded];
-
+- (BOOL)presentContainer {
     UIWindow* window = [self keyWindow];
     if (window == nil) {
-        return;
+        return NO;
     }
     if (self.container.superview != window) {
         [self.container removeFromSuperview];
         [window addSubview:self.container];
     }
-
     CGFloat topInset = window.safeAreaInsets.top;
     self.container.center = CGPointMake(CGRectGetWidth(window.bounds) / 2.0,
                                         topInset + 8.0 + CGRectGetHeight(self.container.bounds) / 2.0);
     self.container.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
                                       UIViewAutoresizingFlexibleRightMargin |
                                       UIViewAutoresizingFlexibleTopMargin;
-
-    self.sizeLabel.text = @"0 MB";
-    self.percentLabel.text = @"0%";
-    self.progressView.progress = 0.0;
-
     [window bringSubviewToFront:self.container];
     [UIView animateWithDuration:0.15
                      animations:^{
                          self.container.alpha = 1.0;
                      }];
+    return YES;
+}
+
+- (void)showSuccessWithText:(NSString*)text {
+    [self buildIfNeeded];
+    [self stopSweep];
+    if (![self presentContainer]) {
+        return;
+    }
+    self.sizeLabel.text = text.length ? text : @"下载完成";
+    self.percentLabel.text = @"✓";
+    self.progressView.progress = 1.0;
+
+    __weak NFBProgressBar* weakSelf = self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.8 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       [weakSelf hide];
+                   });
+}
+
+#pragma mark - Public
+
+- (void)showWithTitle:(NSString*)title {
+    [self buildIfNeeded];
+
+    self.sizeLabel.text = @"0 MB";
+    self.percentLabel.text = @"0%";
+    self.progressView.progress = 0.0;
+
+    if (![self presentContainer]) {
+        return;
+    }
 
     // 先扫动起来，拿到真实进度后自动切到真实值
     [self startSweepIfNeeded];
