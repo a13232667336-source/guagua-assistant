@@ -69,79 +69,109 @@ static UIViewController* TopMostController(void) {
             localizedStringForKey:@"DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING"];
         void (^ffmpegDownload)(NSString*, NSString*, double, void (^)(void)) = ^(
             NSString* args, NSString* ext, double durationMs, void (^completion)(void)) {
-            showHUD(downloadingText);
-            NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
-                URLByAppendingPathComponent:[NSString
-                                                stringWithFormat:@"%@.%@",
-                                                                 NSUUID.UUID
-                                                                     .UUIDString,
-                                                                 ext]];
-            [FFmpegKit
-                executeAsync:[NSString stringWithFormat:@"%@ %@", args, outFile.path]
-                withCompleteCallback:^(FFmpegSession* session) {
-                    ReturnCode* returnCode = [session getReturnCode];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        dismissHUD();
-                        UINotificationFeedbackGenerator* feedback =
-                            [UINotificationFeedbackGenerator new];
-                        [feedback prepare];
-
-                        if ([ReturnCode isSuccess:returnCode]) {
-                            if (![BHTSettings boolForKey:@"direct_save"]) {
-                                [BHTManager showSaveVC:outFile];
-                                [[NFBProgressBar shared]
-                                    showSuccessWithText:
-                                        [[BHTBundle sharedBundle]
-                                            localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"]];
-                            } else {
-                                [feedback
-                                    notificationOccurred:UINotificationFeedbackTypeSuccess];
-                                if ([ext isEqualToString:@"gif"])
-                                    [BHTManager saveGIF:outFile];
-                                else
-                                    [BHTManager save:outFile];
-                                [[NFBProgressBar shared]
-                                    showSuccessWithText:
-                                        [[BHTBundle sharedBundle]
-                                            localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"]];
-                            }
-                        } else {
-                            [feedback notificationOccurred:UINotificationFeedbackTypeError];
-                            UIAlertController* alert = [UIAlertController
-                                alertControllerWithTitle:
-                                    [[BHTBundle sharedBundle]
-                                        localizedTwitterStringForKey:@"ERROR_ALERT_TITLE"]
-                                                 message:[[BHTBundle sharedBundle]
-                                                             localizedStringForKey:
-                                                                 @"UNKNOWN_ERROR"]
-                                          preferredStyle:UIAlertControllerStyleAlert];
-                            [alert addAction:
-                                       [UIAlertAction
-                                           actionWithTitle:[[BHTBundle sharedBundle]
-                                                               localizedTwitterStringForKey:
-                                                                   @"OK_ACTION_LABEL"]
-                                                     style:UIAlertActionStyleDefault
-                                                   handler:nil]];
-                            [TopMostController() presentViewController:alert
-                                                              animated:YES
-                                                            completion:nil];
-                        }
-                        if (completion)
-                            completion();
-                    });
+            // 从参数里取出源地址，用于没给时长时先探测时长（否则百分比不会动）
+            NSString* sourceURLString = nil;
+            NSArray<NSString*>* tokens = [args componentsSeparatedByString:@" "];
+            for (NSUInteger i = 0; i + 1 < tokens.count; i++) {
+                if ([tokens[i] isEqualToString:@"-i"]) {
+                    sourceURLString = tokens[i + 1];
+                    break;
                 }
-                withLogCallback:nil
-                withStatisticsCallback:^(Statistics* statistics) {
-                    double processed = [statistics getTime];
-                    long long bytes = [statistics getSize];
-                    CGFloat progress = durationMs > 0 ? (CGFloat)(processed / durationMs) : 0.0;
-                    NSString* sizeText = bytes > 0
-                                             ? [NSByteCountFormatter
-                                                   stringFromByteCount:bytes
-                                                            countStyle:NSByteCountFormatterCountStyleFile]
-                                             : nil;
-                    [[NFBProgressBar shared] setProgress:progress detail:sizeText];
-                }];
+            }
+
+            void (^startWithDuration)(double) = ^(double resolvedDuration) {
+                showHUD(downloadingText);
+                NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
+                    URLByAppendingPathComponent:[NSString
+                                                    stringWithFormat:@"%@.%@",
+                                                                     NSUUID.UUID.UUIDString,
+                                                                     ext]];
+                [FFmpegKit
+                    executeAsync:[NSString stringWithFormat:@"%@ %@", args, outFile.path]
+                    withCompleteCallback:^(FFmpegSession* session) {
+                        ReturnCode* returnCode = [session getReturnCode];
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            NSString* doneText =
+                                [[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"];
+                            UINotificationFeedbackGenerator* feedback =
+                                [UINotificationFeedbackGenerator new];
+                            [feedback prepare];
+
+                            if ([ReturnCode isSuccess:returnCode]) {
+                                [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
+                                if ([BHTSettings boolForKey:@"direct_save"]) {
+                                    if ([ext isEqualToString:@"gif"])
+                                        [BHTManager saveGIF:outFile];
+                                    else
+                                        [BHTManager save:outFile];
+                                    [[NFBProgressBar shared] showSuccessWithText:doneText];
+                                } else {
+                                    [[NFBProgressBar shared] showSuccessWithText:doneText];
+                                    [BHTManager showSaveVC:outFile];
+                                }
+                            } else {
+                                [feedback notificationOccurred:UINotificationFeedbackTypeError];
+                                [[NFBProgressBar shared] hide];
+                                UIAlertController* alert = [UIAlertController
+                                    alertControllerWithTitle:
+                                        [[BHTBundle sharedBundle]
+                                            localizedTwitterStringForKey:@"ERROR_ALERT_TITLE"]
+                                                     message:[[BHTBundle sharedBundle]
+                                                                 localizedStringForKey:
+                                                                     @"UNKNOWN_ERROR"]
+                                              preferredStyle:UIAlertControllerStyleAlert];
+                                [alert addAction:
+                                           [UIAlertAction
+                                               actionWithTitle:[[BHTBundle sharedBundle]
+                                                                   localizedTwitterStringForKey:
+                                                                       @"OK_ACTION_LABEL"]
+                                                         style:UIAlertActionStyleDefault
+                                                       handler:nil]];
+                                [TopMostController() presentViewController:alert
+                                                                  animated:YES
+                                                                completion:nil];
+                            }
+                            if (completion)
+                                completion();
+                        });
+                    }
+                    withLogCallback:nil
+                    withStatisticsCallback:^(Statistics* statistics) {
+                        double processed = [statistics getTime];
+                        long long bytes = [statistics getSize];
+                        CGFloat progress = resolvedDuration > 0
+                                               ? (CGFloat)(processed / resolvedDuration)
+                                               : 0.0;
+                        NSString* sizeText =
+                            bytes > 0 ? [NSByteCountFormatter
+                                            stringFromByteCount:bytes
+                                                     countStyle:NSByteCountFormatterCountStyleFile]
+                                      : nil;
+                        [[NFBProgressBar shared] setProgress:progress detail:sizeText];
+                    }];
+            };
+
+            if (durationMs > 0) {
+                startWithDuration(durationMs);
+                return;
+            }
+
+            // 没有时长：先探测一次（FFprobe 很快），拿不到就靠扫动动画
+            showHUD(downloadingText);
+            NSURL* probeURL = sourceURLString.length ? [NSURL URLWithString:sourceURLString] : nil;
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+                double resolved = 0;
+                if (probeURL != nil) {
+                    @try {
+                        MediaInformation* info = [BHTManager getM3U8Information:probeURL];
+                        resolved = [info getDuration].doubleValue * 1000.0;
+                    } @catch (__unused NSException* exception) {
+                    }
+                }
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    startWithDuration(resolved);
+                });
+            });
         };
 
         // Variant builders

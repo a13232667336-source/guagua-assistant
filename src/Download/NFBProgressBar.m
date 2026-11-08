@@ -2,16 +2,17 @@
 //  NFBProgressBar.m
 //  呱呱助手
 //
-//  顶部深色细进度条：
-//    · 宽 190pt、条高 3pt，不遮挡内容
-//    · 左侧显示已下载体积（保证 "1234.5 MB" 完整显示），右侧显示百分比
-//    · 拿到总时长时跑真实进度；拿不到时来回扫动（indeterminate），不会静止不动
+//  顶部深色进度提示：
+//    下载中 ---- 左侧「正在下载 1234.5 MB」，右侧百分比，下方 3pt 细条
+//    完成时   ---- 变成更大的一枚「✓ 下载完成」，绿色勾，停留 2.2 秒
 //
 
 #import "Download/NFBProgressBar.h"
 
 @interface NFBProgressBar ()
 @property (nonatomic, strong) UIView* container;
+@property (nonatomic, strong) UIView* progressGroup;
+@property (nonatomic, strong) UIView* successGroup;
 @property (nonatomic, strong) UILabel* sizeLabel;
 @property (nonatomic, strong) UILabel* percentLabel;
 @property (nonatomic, strong) UIProgressView* progressView;
@@ -49,47 +50,100 @@
     if (self.container != nil) {
         return;
     }
-    CGFloat width = 210.0;
-    CGFloat height = 34.0;
+    CGFloat width = 240.0;
 
-    UIView* container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, height)];
-    container.backgroundColor = [UIColor colorWithWhite:0.08 alpha:0.92];
-    container.layer.cornerRadius = 10.0;
+    UIView* container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 36.0)];
+    container.backgroundColor = [UIColor colorWithWhite:0.08 alpha:0.94];
+    container.layer.cornerRadius = 12.0;
     container.layer.shadowColor = [UIColor blackColor].CGColor;
-    container.layer.shadowOpacity = 0.3;
-    container.layer.shadowRadius = 6.0;
+    container.layer.shadowOpacity = 0.35;
+    container.layer.shadowRadius = 8.0;
     container.layer.shadowOffset = CGSizeMake(0, 2);
     container.alpha = 0.0;
+    self.container = container;
 
-    // 左侧：已下载体积（宽度给足，四位数字 + MB 也放得下）
-    UILabel* size = [[UILabel alloc] initWithFrame:CGRectMake(10.0, 5.0, 132.0, 14.0)];
-    size.font = [UIFont systemFontOfSize:11.0 weight:UIFontWeightMedium];
+    // ---- 进度组 ----
+    UIView* progressGroup = [[UIView alloc] initWithFrame:container.bounds];
+    progressGroup.autoresizingMask = UIViewAutoresizingFlexibleWidth |
+                                     UIViewAutoresizingFlexibleHeight;
+
+    UILabel* size = [[UILabel alloc] initWithFrame:CGRectMake(12.0, 5.0, 170.0, 15.0)];
+    size.font = [UIFont systemFontOfSize:11.5 weight:UIFontWeightMedium];
     size.textColor = [UIColor whiteColor];
-    size.text = @"0 MB";
-    [container addSubview:size];
+    size.text = @"正在下载 0 MB";
+    [progressGroup addSubview:size];
 
-    // 右侧：百分比
-    UILabel* percent = [[UILabel alloc] initWithFrame:CGRectMake(width - 58.0, 5.0, 48.0, 14.0)];
-    percent.font = [UIFont systemFontOfSize:11.0 weight:UIFontWeightSemibold];
-    percent.textColor = [UIColor colorWithWhite:1.0 alpha:0.75];
+    UILabel* percent = [[UILabel alloc] initWithFrame:CGRectMake(width - 62.0, 5.0, 50.0, 15.0)];
+    percent.font = [UIFont systemFontOfSize:11.5 weight:UIFontWeightSemibold];
+    percent.textColor = [UIColor colorWithWhite:1.0 alpha:0.8];
     percent.textAlignment = NSTextAlignmentRight;
     percent.text = @"0%";
-    [container addSubview:percent];
+    [progressGroup addSubview:percent];
 
     UIProgressView* bar = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleBar];
-    bar.frame = CGRectMake(10.0, 23.0, width - 20.0, 3.0);
+    bar.frame = CGRectMake(12.0, 25.0, width - 24.0, 3.0);
     bar.progressTintColor = [UIColor colorWithWhite:1.0 alpha:0.95];
     bar.trackTintColor = [UIColor colorWithWhite:1.0 alpha:0.18];
     bar.progress = 0.0;
-    [container addSubview:bar];
+    [progressGroup addSubview:bar];
 
-    self.container = container;
+    [container addSubview:progressGroup];
+
+    // ---- 完成组 ----
+    UIView* successGroup = [[UIView alloc] initWithFrame:container.bounds];
+    successGroup.autoresizingMask = UIViewAutoresizingFlexibleWidth |
+                                    UIViewAutoresizingFlexibleHeight;
+    successGroup.hidden = YES;
+
+    UIImageView* tick = [[UIImageView alloc]
+        initWithImage:[UIImage systemImageNamed:@"checkmark.circle.fill"
+                                withConfiguration:[UIImageSymbolConfiguration
+                                                      configurationWithPointSize:20.0]]];
+    tick.tintColor = [UIColor systemGreenColor];
+    tick.frame = CGRectMake(18.0, 9.0, 20.0, 20.0);
+    tick.contentMode = UIViewContentModeScaleAspectFit;
+    [successGroup addSubview:tick];
+
+    UILabel* done = [[UILabel alloc] initWithFrame:CGRectMake(46.0, 0.0, width - 60.0, 38.0)];
+    done.text = @"下载完成";
+    done.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
+    done.textColor = [UIColor whiteColor];
+    [successGroup addSubview:done];
+
+    [container addSubview:successGroup];
+
+    self.progressGroup = progressGroup;
+    self.successGroup = successGroup;
     self.sizeLabel = size;
     self.percentLabel = percent;
     self.progressView = bar;
 }
 
-#pragma mark - 扫动动画（没有总时长时用）
+- (BOOL)presentContainer {
+    UIWindow* window = [self keyWindow];
+    if (window == nil) {
+        return NO;
+    }
+    if (self.container.superview != window) {
+        [self.container removeFromSuperview];
+        [window addSubview:self.container];
+    }
+    CGFloat topInset = window.safeAreaInsets.top;
+    self.container.center =
+        CGPointMake(CGRectGetWidth(window.bounds) / 2.0,
+                    topInset + 8.0 + CGRectGetHeight(self.container.bounds) / 2.0);
+    self.container.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
+                                      UIViewAutoresizingFlexibleRightMargin |
+                                      UIViewAutoresizingFlexibleTopMargin;
+    [window bringSubviewToFront:self.container];
+    [UIView animateWithDuration:0.15
+                     animations:^{
+                         self.container.alpha = 1.0;
+                     }];
+    return YES;
+}
+
+#pragma mark - 扫动动画
 
 - (void)startSweepIfNeeded {
     if (self.sweeping) {
@@ -100,13 +154,13 @@
     __weak NFBProgressBar* weakSelf = self;
     self.sweepTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 / 30.0
                                                       repeats:YES
-                                                        block:^(NSTimer* t) {
+                                                        block:^(NSTimer* timer) {
                                                             NFBProgressBar* strongSelf = weakSelf;
                                                             if (strongSelf == nil || !strongSelf.sweeping) {
-                                                                [t invalidate];
+                                                                [timer invalidate];
                                                                 return;
                                                             }
-                                                            strongSelf.sweepValue += 0.02;
+                                                            strongSelf.sweepValue += 0.018;
                                                             if (strongSelf.sweepValue > 0.94) {
                                                                 strongSelf.sweepValue = 0.06;
                                                             }
@@ -122,61 +176,24 @@
     self.sweepTimer = nil;
 }
 
-
-- (BOOL)presentContainer {
-    UIWindow* window = [self keyWindow];
-    if (window == nil) {
-        return NO;
-    }
-    if (self.container.superview != window) {
-        [self.container removeFromSuperview];
-        [window addSubview:self.container];
-    }
-    CGFloat topInset = window.safeAreaInsets.top;
-    self.container.center = CGPointMake(CGRectGetWidth(window.bounds) / 2.0,
-                                        topInset + 8.0 + CGRectGetHeight(self.container.bounds) / 2.0);
-    self.container.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
-                                      UIViewAutoresizingFlexibleRightMargin |
-                                      UIViewAutoresizingFlexibleTopMargin;
-    [window bringSubviewToFront:self.container];
-    [UIView animateWithDuration:0.15
-                     animations:^{
-                         self.container.alpha = 1.0;
-                     }];
-    return YES;
-}
-
-- (void)showSuccessWithText:(NSString*)text {
-    [self buildIfNeeded];
-    [self stopSweep];
-    if (![self presentContainer]) {
-        return;
-    }
-    self.sizeLabel.text = text.length ? text : @"下载完成";
-    self.percentLabel.text = @"✓";
-    self.progressView.progress = 1.0;
-
-    __weak NFBProgressBar* weakSelf = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.8 * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{
-                       [weakSelf hide];
-                   });
-}
-
 #pragma mark - Public
 
 - (void)showWithTitle:(NSString*)title {
     [self buildIfNeeded];
+    [self stopSweep];
 
-    self.sizeLabel.text = @"0 MB";
+    self.progressGroup.hidden = NO;
+    self.successGroup.hidden = YES;
+
+    NSString* prefix = title.length ? title : @"正在下载";
+    self.sizeLabel.text = [NSString stringWithFormat:@"%@ 0 MB", prefix];
     self.percentLabel.text = @"0%";
+    self.percentLabel.textColor = [UIColor colorWithWhite:1.0 alpha:0.8];
     self.progressView.progress = 0.0;
 
     if (![self presentContainer]) {
         return;
     }
-
-    // 先扫动起来，拿到真实进度后自动切到真实值
     [self startSweepIfNeeded];
 }
 
@@ -187,8 +204,11 @@
     CGFloat clamped = MAX(0.0, MIN(1.0, progress));
 
     dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.successGroup.hidden == NO) {
+            return;  // 已完成，别再被进度覆盖
+        }
         if (detail.length > 0) {
-            self.sizeLabel.text = detail;
+            self.sizeLabel.text = [NSString stringWithFormat:@"正在下载 %@", detail];
         }
         if (clamped > 0.001) {
             [self stopSweep];
@@ -201,18 +221,52 @@
     });
 }
 
+- (void)showSuccessWithText:(NSString*)text {
+    [self buildIfNeeded];
+    [self stopSweep];
+
+    // 换成大一号的“完成”样式
+    self.container.bounds = CGRectMake(0, 0, 200.0, 44.0);
+    self.container.layer.cornerRadius = 14.0;
+    self.progressGroup.hidden = YES;
+    self.successGroup.hidden = NO;
+    for (UIView* sub in self.successGroup.subviews) {
+        if ([sub isKindOfClass:[UILabel class]]) {
+            ((UILabel*)sub).text = text.length ? text : @"下载完成";
+            sub.frame = CGRectMake(46.0, 0.0, 140.0, 44.0);
+        } else {
+            sub.frame = CGRectMake(18.0, 12.0, 20.0, 20.0);
+        }
+    }
+
+    if (![self presentContainer]) {
+        return;
+    }
+
+    __weak NFBProgressBar* weakSelf = self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.2 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+                       [weakSelf hide];
+                   });
+}
+
 - (void)hide {
     if (self.container == nil) {
         return;
     }
     [self stopSweep];
+    __weak NFBProgressBar* weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIView animateWithDuration:0.2
                          animations:^{
-                             self.container.alpha = 0.0;
+                             weakSelf.container.alpha = 0.0;
                          }
                          completion:^(BOOL finished) {
-                             [self.container removeFromSuperview];
+                             [weakSelf.container removeFromSuperview];
+                             weakSelf.container.bounds = CGRectMake(0, 0, 240.0, 36.0);
+                             weakSelf.container.layer.cornerRadius = 12.0;
+                             weakSelf.progressGroup.hidden = NO;
+                             weakSelf.successGroup.hidden = YES;
                          }];
     });
 }

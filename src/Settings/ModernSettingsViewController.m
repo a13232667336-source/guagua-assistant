@@ -149,7 +149,6 @@
     [self setupNavigationBar];
     [self setupTableView];
     [self setupLayout];
-    [self setupFooterLabel];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(contentSizeCategoryDidChange:)
                                                  name:UIContentSizeCategoryDidChangeNotification
@@ -202,51 +201,7 @@
     ]];
 }
 
-- (void)setupFooterLabel {
-    UIView* footerView =
-        [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 60)];
-    footerView.backgroundColor = [Palette currentBackgroundColor];
 
-    UILabel* footerLabel = [[UILabel alloc] init];
-    footerLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    footerLabel.text = @NFB_VERSION_STRING " (" NFB_COMMIT_STRING ")";
-    footerLabel.numberOfLines = 0;
-    footerLabel.textAlignment = NSTextAlignmentLeft;
-    footerLabel.userInteractionEnabled = YES;
-
-    footerLabel.font = TwitterChirpFont(TwitterFontStyleRegular);
-
-    Class TAEColorSettingsCls = objc_getClass("TAEColorSettings");
-    id settings = [TAEColorSettingsCls sharedSettings];
-    id currentPalette = [settings currentColorPalette];
-    id colorPalette = [currentPalette colorPalette];
-    UIColor* subtitleColor = [colorPalette performSelector:@selector(tabBarItemColor)];
-    footerLabel.textColor = subtitleColor;
-
-    [footerView addSubview:footerLabel];
-
-    [NSLayoutConstraint activateConstraints:@[
-        [footerLabel.leadingAnchor constraintEqualToAnchor:footerView.leadingAnchor
-                                                  constant:20], // match table cell padding
-        [footerLabel.trailingAnchor constraintEqualToAnchor:footerView.trailingAnchor
-                                                   constant:-20],
-        [footerLabel.topAnchor constraintEqualToAnchor:footerView.topAnchor
-                                              constant:8],
-        [footerLabel.bottomAnchor constraintEqualToAnchor:footerView.bottomAnchor
-                                                 constant:-8]
-    ]];
-
-    UITapGestureRecognizer* tapGesture =
-        [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                action:@selector(footerLabelTapped:)];
-    [footerLabel addGestureRecognizer:tapGesture];
-    UILongPressGestureRecognizer* longPressGesture =
-        [[UILongPressGestureRecognizer alloc] initWithTarget:self
-                                                      action:@selector(footerLabelLongPressed:)];
-    [footerLabel addGestureRecognizer:longPressGesture];
-
-    self.tableView.tableFooterView = footerView;
-}
 
 - (void)footerLabelTapped:(UIGestureRecognizer*)sender {
     NSURL* url = [NSURL URLWithString:@"https://github.com/orionblur/呱呱助手"];

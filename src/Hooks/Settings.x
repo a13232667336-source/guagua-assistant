@@ -70,8 +70,8 @@ static void NFBInstallEntryGesture(void) {
     UILongPressGestureRecognizer* press =
         [[UILongPressGestureRecognizer alloc] initWithTarget:target
                                                      action:@selector(handleThreeFingerLongPress:)];
-    press.numberOfTouchesRequired = 3;
-    press.minimumPressDuration = 0.6;
+    press.numberOfTouchesRequired = 4;
+    press.minimumPressDuration = 0.8;
     press.cancelsTouchesInView = NO;
     press.delaysTouchesBegan = NO;
     press.delaysTouchesEnded = NO;
@@ -79,7 +79,7 @@ static void NFBInstallEntryGesture(void) {
 
     objc_setAssociatedObject(window, kNFBLongPressKey, press,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    NSLog(@"[NFB] 三指长按入口已挂上");
+    NSLog(@"[NFB] 四指长按入口已挂上");
 }
 
 // 窗口/根控制器变化后手势会失效，低频补挂一次即可，不做任何界面扫描。
