@@ -20,6 +20,7 @@
         [self setupViews];
         [self setupConstraints];
         NFBPrepareCardCell(self);
+        NFBStyleIconChip(self.iconImageView, NFBAccentColor());
     }
     return self;
 }
@@ -63,10 +64,10 @@
 - (void)setupConstraints {
     [NSLayoutConstraint activateConstraints:@[
         [self.iconImageView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
-                                                         constant:20],
+                                                         constant:16],
         [self.iconImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
-        [self.iconImageView.widthAnchor constraintEqualToConstant:20],
-        [self.iconImageView.heightAnchor constraintEqualToConstant:20],
+        [self.iconImageView.widthAnchor constraintEqualToConstant:34],
+        [self.iconImageView.heightAnchor constraintEqualToConstant:34],
 
         [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.iconImageView.trailingAnchor
                                                       constant:16],
@@ -155,6 +156,7 @@
         [self setupViews];
         [self setupConstraints];
         NFBPrepareCardCell(self);
+        NFBStyleIconChip(self.iconImageView, NFBAccentColor());
     }
     return self;
 }
@@ -240,6 +242,7 @@
         [self setupViews];
         [self setupConstraints];
         NFBPrepareCardCell(self);
+        NFBStyleIconChip(self.iconImageView, NFBAccentColor());
     }
     return self;
 }

@@ -1,13 +1,42 @@
 //
 //  NFBAppearance.m
-//  呱呱助手
+//  呱呱助手 —— 鲜艳版设置界面样式
 //
 
 #import "Settings/NFBAppearance.h"
-#import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
+#import <objc/runtime.h>
 
 static const void* kNFBCardViewKey = &kNFBCardViewKey;
+
+UIColor* NFBAccentColor(void) {
+    return [UIColor colorWithRed:0.36 green:0.36 blue:0.98 alpha:1.0];  // 紫蓝
+}
+
+UIColor* NFBAccentForPage(NSString* pageKey) {
+    if ([pageKey isEqualToString:@"general"]) {
+        return [UIColor colorWithRed:0.36 green:0.36 blue:0.98 alpha:1.0];  // 紫蓝
+    }
+    if ([pageKey isEqualToString:@"timelines"]) {
+        return [UIColor colorWithRed:1.00 green:0.42 blue:0.32 alpha:1.0];  // 珊瑚橙
+    }
+    if ([pageKey isEqualToString:@"media_downloads"]) {
+        return [UIColor colorWithRed:0.05 green:0.72 blue:0.60 alpha:1.0];  // 青绿
+    }
+    return NFBAccentColor();
+}
+
+void NFBStyleIconChip(UIImageView* iconView, UIColor* accent) {
+    if (iconView == nil) {
+        return;
+    }
+    iconView.backgroundColor = [accent colorWithAlphaComponent:0.16];
+    iconView.layer.cornerRadius = 10.0;
+    iconView.layer.cornerCurve = kCACornerCurveContinuous;
+    iconView.clipsToBounds = YES;
+    iconView.contentMode = UIViewContentModeCenter;
+    iconView.tintColor = accent;
+}
 
 void NFBPrepareCardCell(UITableViewCell* cell) {
     if (cell == nil) {
@@ -15,22 +44,25 @@ void NFBPrepareCardCell(UITableViewCell* cell) {
     }
     cell.backgroundColor = [UIColor clearColor];
     cell.contentView.backgroundColor = [UIColor clearColor];
-    cell.selectionStyle = UITableViewCellSelectionStyleDefault;
 
     UIView* card = [[UIView alloc] init];
-    card.backgroundColor = [UIColor secondarySystemBackgroundColor];
-    card.layer.cornerRadius = 16.0;
+    card.backgroundColor = [UIColor colorWithDynamicProvider:^UIColor*(UITraitCollection* traits) {
+        return traits.userInterfaceStyle == UIUserInterfaceStyleDark
+                   ? [UIColor colorWithWhite:0.15 alpha:1.0]
+                   : [UIColor whiteColor];
+    }];
+    card.layer.cornerRadius = 18.0;
     card.layer.cornerCurve = kCACornerCurveContinuous;
-    card.layer.borderWidth = 0.5;
-    card.layer.borderColor = [UIColor colorWithWhite:0.5 alpha:0.12].CGColor;
-    card.layer.shadowColor = [UIColor blackColor].CGColor;
-    card.layer.shadowOpacity = 0.06;
-    card.layer.shadowRadius = 6.0;
-    card.layer.shadowOffset = CGSizeMake(0, 2);
+    card.layer.borderWidth = 1.0;
+    card.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.55].CGColor;
+    card.layer.shadowColor = NFBAccentColor().CGColor;
+    card.layer.shadowOpacity = 0.16;
+    card.layer.shadowRadius = 10.0;
+    card.layer.shadowOffset = CGSizeMake(0, 4);
 
     UIView* selected = [[UIView alloc] init];
-    selected.backgroundColor = [UIColor tertiarySystemFillColor];
-    selected.layer.cornerRadius = 16.0;
+    selected.backgroundColor = [NFBAccentColor() colorWithAlphaComponent:0.10];
+    selected.layer.cornerRadius = 18.0;
     selected.layer.cornerCurve = kCACornerCurveContinuous;
 
     cell.backgroundView = card;
@@ -47,20 +79,25 @@ void NFBLayoutCardCell(UITableViewCell* cell) {
     if (card == nil) {
         return;
     }
-    card.frame = UIEdgeInsetsInsetRect(cell.bounds, UIEdgeInsetsMake(3.0, 16.0, 3.0, 16.0));
+    card.frame = UIEdgeInsetsInsetRect(cell.bounds, UIEdgeInsetsMake(4.0, 16.0, 4.0, 16.0));
+    card.layer.shadowPath =
+        [UIBezierPath bezierPathWithRoundedRect:card.bounds cornerRadius:18.0].CGPath;
 
     UIView* selected = cell.selectedBackgroundView;
     if (selected != nil) {
         selected.frame = card.frame;
-        selected.layer.cornerRadius = 16.0;
+        selected.layer.cornerRadius = 18.0;
     }
 }
 
-void NFBInstallGradientBackground(UIView* host) {
+void NFBInstallVividGradient(UIView* host, UIColor* accent) {
     if (host == nil) {
         return;
     }
-    static const NSInteger kGradientTag = 0x6E666267;
+    if (accent == nil) {
+        accent = NFBAccentColor();
+    }
+    static const NSInteger kGradientTag = 0x6E666268;
     UIView* existing = [host viewWithTag:kGradientTag];
     [existing removeFromSuperview];
 
@@ -73,13 +110,25 @@ void NFBInstallGradientBackground(UIView* host) {
     CAGradientLayer* layer = [CAGradientLayer layer];
     layer.frame = host.bounds;
     layer.colors = @[
-        (id)[UIColor colorWithRed:0.55 green:0.60 blue:1.00 alpha:0.10].CGColor,
-        (id)[UIColor colorWithRed:0.45 green:0.85 blue:0.85 alpha:0.06].CGColor,
+        (id)[accent colorWithAlphaComponent:0.55].CGColor,
+        (id)[accent colorWithAlphaComponent:0.22].CGColor,
+        (id)[[UIColor systemBackgroundColor] colorWithAlphaComponent:0.0].CGColor
+    ];
+    layer.locations = @[ @0.0, @0.32, @0.72 ];
+    layer.startPoint = CGPointMake(0.0, 0.0);
+    layer.endPoint = CGPointMake(1.0, 1.0);
+    [gradientHost.layer addSublayer:layer];
+
+    // 顶部一抹高光，让鲜艳色块更有层次
+    CAGradientLayer* glow = [CAGradientLayer layer];
+    glow.frame = CGRectMake(0, 0, CGRectGetWidth(host.bounds), 180.0);
+    glow.colors = @[
+        (id)[UIColor colorWithWhite:1.0 alpha:0.30].CGColor,
         (id)[UIColor clearColor].CGColor
     ];
-    layer.locations = @[ @0.0, @0.45, @1.0 ];
-    layer.startPoint = CGPointMake(0.0, 0.0);
-    layer.endPoint = CGPointMake(0.35, 0.55);
-    [gradientHost.layer addSublayer:layer];
+    glow.startPoint = CGPointMake(0.0, 0.0);
+    glow.endPoint = CGPointMake(0.0, 1.0);
+    [gradientHost.layer addSublayer:glow];
+
     [host insertSubview:gradientHost atIndex:0];
 }

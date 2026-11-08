@@ -75,7 +75,7 @@
 
 - (void)setupTable {
     self.view.backgroundColor = [Palette currentBackgroundColor];
-    NFBInstallGradientBackground(self.view);
+    NFBInstallVividGradient(self.view, NFBAccentForPage(self.pageKey));
     self.tableView = [[UITableView alloc] initWithFrame:self.view.bounds
                                                   style:UITableViewStyleGrouped];
     self.tableView.autoresizingMask =
@@ -84,6 +84,9 @@
     self.tableView.delegate = self;
     self.tableView.backgroundColor = [UIColor clearColor];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    if (@available(iOS 15.0, *)) {
+        self.tableView.sectionHeaderTopPadding = 0.0;
+    }
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     self.tableView.showsVerticalScrollIndicator = NO;
     self.tableView.showsHorizontalScrollIndicator = NO;

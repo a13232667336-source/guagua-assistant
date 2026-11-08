@@ -30,41 +30,9 @@
 
 #pragma mark - Section Headers
 
-- (UIView*)brandHeaderView {
-    UIView* header = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 88)];
-    header.backgroundColor = [UIColor clearColor];
 
-    UIImageView* avatar = [[UIImageView alloc] initWithImage:NFBEmbeddedAvatar()];
-    avatar.translatesAutoresizingMaskIntoConstraints = NO;
-    avatar.contentMode = UIViewContentModeScaleAspectFill;
-    avatar.layer.cornerRadius = 16.0;
-    avatar.layer.cornerCurve = kCACornerCurveContinuous;
-    avatar.clipsToBounds = YES;
-    [header addSubview:avatar];
-
-    UILabel* name = [[UILabel alloc] init];
-    name.translatesAutoresizingMaskIntoConstraints = NO;
-    name.text = [[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"];
-    name.font = [UIFont systemFontOfSize:22.0 weight:UIFontWeightBold];
-    name.textColor = [UIColor labelColor];
-    [header addSubview:name];
-
-    [NSLayoutConstraint activateConstraints:@[
-        [avatar.leadingAnchor constraintEqualToAnchor:header.leadingAnchor constant:20],
-        [avatar.centerYAnchor constraintEqualToAnchor:header.centerYAnchor],
-        [avatar.widthAnchor constraintEqualToConstant:48],
-        [avatar.heightAnchor constraintEqualToConstant:48],
-        [name.leadingAnchor constraintEqualToAnchor:avatar.trailingAnchor constant:14],
-        [name.centerYAnchor constraintEqualToAnchor:header.centerYAnchor],
-        [name.trailingAnchor constraintEqualToAnchor:header.trailingAnchor constant:-20]
-    ]];
-    return header;
-}
 
 - (UIView*)tableView:(UITableView*)tableView viewForHeaderInSection:(NSInteger)section {
-    if (section == 0) {
-        return [self brandHeaderView];
-    }
     if (section == 1) {
         return [self headerViewWithTitle:[[BHTBundle sharedBundle]
                                              localizedStringForKey:@"DEVELOPER_SECTION_HEADER_TITLE"]];
@@ -76,21 +44,20 @@
 
 - (UIView*)headerViewWithTitle:(NSString*)title {
     UIView* headerView = [[UIView alloc] init];
-    headerView.backgroundColor = [Palette currentBackgroundColor];
+    headerView.backgroundColor = [UIColor clearColor];
 
     UILabel* titleLabel = [[UILabel alloc] init];
     titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
     titleLabel.text = title;
 
     id fontGroup = [BHTManager sharedFontGroup];
-    titleLabel.font = [fontGroup performSelector:@selector(headline1BoldFont)];
+    titleLabel.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightBold];
 
     Class TAEColorSettingsCls = objc_getClass("TAEColorSettings");
     id settings = [TAEColorSettingsCls sharedSettings];
     id currentPalette = [settings currentColorPalette];
     id colorPalette = [currentPalette colorPalette];
-    UIColor* titleColor = [colorPalette performSelector:@selector(textColor)];
-    titleLabel.textColor = titleColor;
+    titleLabel.textColor = NFBAccentColor();
 
     [headerView addSubview:titleLabel];
 
@@ -110,12 +77,12 @@
 
 - (CGFloat)tableView:(UITableView*)tableView heightForHeaderInSection:(NSInteger)section {
     if (section == 0) {
-        return 88.0;
+        return 10.0;
     }
     if (section == 1) {
-        return 44.0;
+        return 34.0;
     }
-    return 6.0;
+    return 10.0;
 }
 
 #pragma mark - Section Footers
@@ -204,7 +171,7 @@
 
 - (void)setupNavigationBar {
     self.view.backgroundColor = [Palette currentBackgroundColor];
-    NFBInstallGradientBackground(self.view);
+    NFBInstallVividGradient(self.view, NFBAccentColor());
     if (self.account) {
         self.navigationItem.titleView = [objc_getClass("TFNTitleView")
             titleViewWithTitle:[[BHTBundle sharedBundle] localizedStringForKey:@"NFB_SETTINGS_TITLE"]
@@ -221,6 +188,9 @@
     self.tableView.delegate = self;
     self.tableView.backgroundColor = [UIColor clearColor];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    if (@available(iOS 15.0, *)) {
+        self.tableView.sectionHeaderTopPadding = 0.0;
+    }
     self.tableView.estimatedRowHeight = 80;
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     self.tableView.estimatedSectionHeaderHeight = 50;
