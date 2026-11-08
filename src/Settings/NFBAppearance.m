@@ -79,7 +79,7 @@ void NFBLayoutCardCell(UITableViewCell* cell) {
     if (card == nil) {
         return;
     }
-    card.frame = UIEdgeInsetsInsetRect(cell.bounds, UIEdgeInsetsMake(4.0, 16.0, 4.0, 16.0));
+    card.frame = UIEdgeInsetsInsetRect(cell.bounds, UIEdgeInsetsMake(5.0, 16.0, 5.0, 16.0));
     card.layer.shadowPath =
         [UIBezierPath bezierPathWithRoundedRect:card.bounds cornerRadius:18.0].CGPath;
 

@@ -265,14 +265,26 @@
 - (UITableViewCell*)developerCellForTableView:(UITableView*)tableView
                                   atIndexPath:(NSIndexPath*)indexPath
                                     fromArray:(NSArray*)array {
-    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:@"DeveloperCell"];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                      reuseIdentifier:@"DeveloperCell"];
-        [self setupDeveloperCell:cell];
-    }
+    ModernSettingsTableViewCell* cell =
+        [tableView dequeueReusableCellWithIdentifier:@"SettingsCell" forIndexPath:indexPath];
     NSDictionary* developer = array[indexPath.row];
-    [self configureDeveloperCell:cell withDeveloper:developer];
+
+    NSString* role = developer[@"role"];
+    if (role.length == 0) {
+        role = [NSString stringWithFormat:@"@%@", developer[@"username"] ?: @""];
+    }
+    [cell configureWithTitle:developer[@"title"] subtitle:role iconName:nil];
+
+    // 头像：用 36pt 圆形，去掉彩色底片
+    cell.iconImageView.backgroundColor = [UIColor clearColor];
+    cell.iconImageView.layer.cornerRadius = 18.0;
+    cell.iconImageView.contentMode = UIViewContentModeScaleAspectFill;
+    cell.iconImageView.clipsToBounds = YES;
+    if ([developer[@"avatarEmbedded"] boolValue]) {
+        cell.iconImageView.image = NFBEmbeddedAvatar() ?: [UIImage systemImageNamed:@"person.crop.circle"];
+    } else {
+        cell.iconImageView.image = [UIImage systemImageNamed:@"person.crop.circle"];
+    }
     return cell;
 }
 
@@ -284,7 +296,7 @@
     cell.imageView.image = nil;
     UIImageView* avatarImageView = [[UIImageView alloc] init];
     avatarImageView.translatesAutoresizingMaskIntoConstraints = NO;
-    avatarImageView.layer.cornerRadius = 26;
+    avatarImageView.layer.cornerRadius = 23;
     avatarImageView.clipsToBounds = YES;
     avatarImageView.contentMode = UIViewContentModeScaleAspectFill;
     avatarImageView.tag = 100;
