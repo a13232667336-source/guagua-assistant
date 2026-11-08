@@ -370,14 +370,14 @@
         NFBPrepareCardCell(self);
         [NSLayoutConstraint activateConstraints:@[
             [self.toggleSwitch.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
-                                                             constant:-26],
+                                                             constant:-34],
             [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
                                                           constant:22],
             [self.titleLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor
                                                       constant:14],
             [self.titleLabel.trailingAnchor constraintEqualToAnchor:self.toggleSwitch.leadingAnchor
                                                            constant:-16],
-            [self.toggleSwitch.centerYAnchor constraintEqualToAnchor:self.titleLabel.centerYAnchor],
+            [self.toggleSwitch.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
             [self.subtitleLabel.leadingAnchor constraintEqualToAnchor:self.titleLabel.leadingAnchor],
             [self.subtitleLabel.trailingAnchor constraintEqualToAnchor:self.titleLabel.trailingAnchor],
             [self.subtitleLabel.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor
