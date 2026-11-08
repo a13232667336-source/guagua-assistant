@@ -35,7 +35,11 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                 @"subtitleKey" : @"MODERN_SETTINGS_MEDIA_SUBTITLE",
                 @"settings" : @[
                     @{@"key" : @"download_videos", @"default" : @YES, @"type" : @"toggle"},
-                    @{@"key" : @"auto_highest_load", @"default" : @YES, @"type" : @"toggle"}
+                    @{@"key" : @"download_highest_quality", @"default" : @YES, @"type" : @"toggle"},
+                    @{@"key" : @"download_all_videos", @"default" : @YES, @"type" : @"toggle"},
+                    @{@"key" : @"direct_save", @"default" : @YES, @"type" : @"toggle"},
+                    @{@"key" : @"auto_highest_load", @"default" : @YES, @"type" : @"toggle"},
+                    @{@"key" : @"restore_video_timestamp", @"default" : @YES, @"type" : @"toggle"}
                 ]
             }
         };
