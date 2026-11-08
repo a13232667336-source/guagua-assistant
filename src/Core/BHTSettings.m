@@ -74,6 +74,7 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsIndex(void) {
 // names to the normalised keys, so existing installs keep their settings.
 + (void)load {
     [self migrateUndoTweetToggle];
+    [self applyDefaultValuesIfNeeded];
     [self synchronizeDownloadMasterToggles];
 
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
@@ -236,5 +237,30 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsIndex(void) {
     return [self boolForKey:@"download_videos"];
 }
 
+#pragma mark - 首次安装默认全开
+
+// 新用户 / 新注入：所有开关默认打开（只写一次，之后尊重用户自己的选择）
++ (void)applyDefaultValuesIfNeeded {
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults boolForKey:@"nfb_defaults_applied_v1"]) {
+        return;
+    }
+
+    for (NSDictionary* page in BHTSettingsPages().allValues) {
+        for (NSDictionary* setting in page[@"settings"]) {
+            NSString* key = setting[@"key"];
+            id value = setting[@"default"];
+            if (key == nil || value == nil) {
+                continue;
+            }
+            [defaults setObject:value forKey:key];
+        }
+    }
+    [defaults setBool:YES forKey:@"nfb_defaults_applied_v1"];
+    [defaults synchronize];
+    NSLog(@"[NFB] 已应用默认值：全部开关默认打开");
+}
+
 @end
+
 
