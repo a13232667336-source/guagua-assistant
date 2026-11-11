@@ -92,14 +92,6 @@
 }
 
 - (void)runTask:(NFBDownloadTask*)task {
-    // 顶部胶囊只显示“当前最早”的那条
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSString* runTitle = [task.title hasPrefix:@"正在下载"]
-                                 ? task.title
-                                 : [NSString stringWithFormat:@"正在下载%@", task.title];
-        [[NFBProgressBar shared] showWithTitle:runTitle];
-    });
-
     if (task.durationMs > 0) {
         [self startSessionForTask:task duration:task.durationMs];
         return;
@@ -170,25 +162,25 @@
 
                     if (success) {
                         [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
-                        [[NFBProgressBar shared]
-                            showSuccessWithText:[NSString stringWithFormat:@"%@ 下载已完成",
-                                                                           task.title]];
                         task.state = NFBDownloadStateDone;
                         task.progress = 1.0;
                     } else {
                         [feedback notificationOccurred:UINotificationFeedbackTypeError];
                         task.state = NFBDownloadStateFailed;
-                        [[NFBProgressBar shared]
-                            showSuccessWithText:[NSString stringWithFormat:@"%@ 下载失败",
-                                                                           task.title]];
-                    }
-
-                    @synchronized(self) {
-                        self.runningCount = MAX(0, self.runningCount - 1);
-                        [self.taskList removeObject:task];
                     }
                     [self notifyChange];
-                    [self pump];
+
+                    // 让“已完成/下载失败”在卡片上停留 1.5 秒，然后才移除并开始下一条
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                                 (int64_t)(1.5 * NSEC_PER_SEC)),
+                                   dispatch_get_main_queue(), ^{
+                                       @synchronized(self) {
+                                           self.runningCount = MAX(0, self.runningCount - 1);
+                                           [self.taskList removeObject:task];
+                                       }
+                                       [self notifyChange];
+                                       [self pump];
+                                   });
                 });
             });
         }
@@ -198,11 +190,11 @@
             long long bytes = [statistics getSize];
             task.bytes = bytes;
             task.progress = durationMs > 0 ? MAX(0.0, MIN(1.0, processed / durationMs)) : 0.0;
-            [[NFBProgressBar shared] setProgress:task.progress
-                                          detail:[NSByteCountFormatter
-                                                     stringFromByteCount:bytes
-                                                              countStyle:NSByteCountFormatterCountStyleFile]];
-            [self notifyChange];
+            static double lastReported = 0;
+            if (fabs(task.progress - lastReported) > 0.02 || task.progress >= 0.999) {
+                lastReported = task.progress;
+                [self notifyChange];
+            }
         }];
 }
 
@@ -216,6 +208,8 @@
                 status = task.progress > 0.001
                              ? [NSString stringWithFormat:@"下载中 %.0f%%", task.progress * 100]
                              : @"下载中";
+            } else if (task.state == NFBDownloadStateDone) {
+                status = @"已完成";
             } else if (task.state == NFBDownloadStateFailed) {
                 status = @"下载失败";
             }
