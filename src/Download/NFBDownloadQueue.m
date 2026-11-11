@@ -191,4 +191,27 @@
         }];
 }
 
+
+- (NSArray<NSDictionary*>*)queueRows {
+    NSMutableArray* rows = [NSMutableArray array];
+    @synchronized(self) {
+        for (NFBDownloadTask* task in self.taskList) {
+            NSString* status = @"排队中";
+            if (task.state == NFBDownloadStateRunning) {
+                status = task.progress > 0.001
+                             ? [NSString stringWithFormat:@"下载中 %.0f%%", task.progress * 100]
+                             : @"下载中";
+            } else if (task.state == NFBDownloadStateFailed) {
+                status = @"下载失败";
+            }
+            [rows addObject:@{
+                @"title" : task.title ?: @"视频",
+                @"status" : status,
+                @"progress" : @(task.progress)
+            }];
+        }
+    }
+    return rows;
+}
+
 @end
