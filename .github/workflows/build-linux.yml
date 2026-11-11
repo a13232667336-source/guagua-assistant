@@ -62,9 +62,17 @@ jobs:
           ln -sf "$(command -v clang++)" "$TC/clang++"
           ln -sf "$(command -v llvm-ar || command -v ar)" "$TC/ar"
           ln -sf "$(command -v llvm-ranlib || command -v llvm-ranlib-14 || command -v llvm-ranlib-15 || command -v ranlib)" "$TC/ranlib"
-          ln -sf "$(command -v llvm-nm || command -v nm)" "$TC/nm"
-          ln -sf "$(command -v llvm-strip || command -v strip)" "$TC/strip"
-          ln -sf "$(command -v llvm-objcopy || command -v objcopy)" "$TC/objcopy"
+          NM_BIN=$(command -v llvm-nm || command -v llvm-nm-14 || true)
+          if [ -n "$NM_BIN" ]; then ln -sf "$NM_BIN" "$TC/nm"; fi
+          STRIP_BIN=$(command -v llvm-strip || command -v llvm-strip-14 || true)
+          if [ -n "$STRIP_BIN" ]; then
+            ln -sf "$STRIP_BIN" "$TC/strip"
+          else
+            # GNU strip 不认 Mach-O，这里给个空实现：不 strip 也能正常注入
+            printf '#!/bin/sh\nexit 0\n' > "$TC/strip"; chmod +x "$TC/strip"
+          fi
+          OBJCOPY_BIN=$(command -v llvm-objcopy || command -v llvm-objcopy-14 || true)
+          if [ -n "$OBJCOPY_BIN" ]; then ln -sf "$OBJCOPY_BIN" "$TC/objcopy"; fi
           ls -l "$TC"
 
       - name: sdk
