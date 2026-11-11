@@ -147,34 +147,49 @@
             ReturnCode* returnCode = [session getReturnCode];
             BOOL success = [ReturnCode isSuccess:returnCode];
 
-            dispatch_async(dispatch_get_main_queue(), ^{
-                UINotificationFeedbackGenerator* feedback = [UINotificationFeedbackGenerator new];
-                [feedback prepare];
+            // 保存相册放到串行后台队列：避免连下多条时重复占用相册数据库导致卡死
+            static dispatch_queue_t saveQueue;
+            static dispatch_once_t saveOnce;
+            dispatch_once(&saveOnce, ^{
+                saveQueue = dispatch_queue_create("com.guagua.save", DISPATCH_QUEUE_SERIAL);
+            });
 
+            dispatch_async(saveQueue, ^{
                 if (success) {
-                    [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
                     if ([task.ext isEqualToString:@"gif"]) {
                         [BHTManager saveGIF:outFile];
                     } else {
                         [BHTManager save:outFile];
                     }
-                    [[NFBProgressBar shared]
-                        showSuccessWithText:[NSString stringWithFormat:@"%@ 下载已完成", task.title]];
-                    task.state = NFBDownloadStateDone;
-                    task.progress = 1.0;
-                } else {
-                    [feedback notificationOccurred:UINotificationFeedbackTypeError];
-                    task.state = NFBDownloadStateFailed;
-                    [[NFBProgressBar shared]
-                        showSuccessWithText:[NSString stringWithFormat:@"%@ 下载失败", task.title]];
                 }
 
-                @synchronized(self) {
-                    self.runningCount = MAX(0, self.runningCount - 1);
-                    [self.taskList removeObject:task];
-                }
-                [self notifyChange];
-                [self pump];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    UINotificationFeedbackGenerator* feedback =
+                        [UINotificationFeedbackGenerator new];
+                    [feedback prepare];
+
+                    if (success) {
+                        [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
+                        [[NFBProgressBar shared]
+                            showSuccessWithText:[NSString stringWithFormat:@"%@ 下载已完成",
+                                                                           task.title]];
+                        task.state = NFBDownloadStateDone;
+                        task.progress = 1.0;
+                    } else {
+                        [feedback notificationOccurred:UINotificationFeedbackTypeError];
+                        task.state = NFBDownloadStateFailed;
+                        [[NFBProgressBar shared]
+                            showSuccessWithText:[NSString stringWithFormat:@"%@ 下载失败",
+                                                                           task.title]];
+                    }
+
+                    @synchronized(self) {
+                        self.runningCount = MAX(0, self.runningCount - 1);
+                        [self.taskList removeObject:task];
+                    }
+                    [self notifyChange];
+                    [self pump];
+                });
             });
         }
         withLogCallback:nil

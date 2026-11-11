@@ -154,18 +154,33 @@
     return [NSString stringWithFormat:@"%@x%@", q.firstObject, q.lastObject];
 }
 + (void)save:(NSURL*)url {
-    [[PHPhotoLibrary sharedPhotoLibrary]
-        performChangesAndWait:^{
-            [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:url];
-        }
-                        error:nil];
+    if (url == nil) {
+        return;
+    }
+    PHPhotoLibrary* library = [PHPhotoLibrary sharedPhotoLibrary];
+    void (^changes)(void) = ^{
+        [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:url];
+    };
+    // 主线程调用 performChangesAndWait 会死锁（表现为 App 卡死/闪退）
+    if ([NSThread isMainThread]) {
+        [library performChanges:changes completionHandler:nil];
+    } else {
+        [library performChangesAndWait:changes error:nil];
+    }
 }
 + (void)saveGIF:(NSURL*)url {
-    [[PHPhotoLibrary sharedPhotoLibrary]
-        performChangesAndWait:^{
-            [PHAssetChangeRequest creationRequestForAssetFromImageAtFileURL:url];
-        }
-                        error:nil];
+    if (url == nil) {
+        return;
+    }
+    PHPhotoLibrary* library = [PHPhotoLibrary sharedPhotoLibrary];
+    void (^changes)(void) = ^{
+        [PHAssetChangeRequest creationRequestForAssetFromImageAtFileURL:url];
+    };
+    if ([NSThread isMainThread]) {
+        [library performChanges:changes completionHandler:nil];
+    } else {
+        [library performChangesAndWait:changes error:nil];
+    }
 }
 + (void)showSaveVC:(NSURL*)url {
     UIActivityViewController* acVC =
