@@ -24,9 +24,24 @@ jobs:
           path: src
 
       - name: deps
+        timeout-minutes: 15
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git make clang lld llvm libplist-utils zip unzip curl xz-utils perl
+          export DEBIAN_FRONTEND=noninteractive
+          ok=0
+          for i in 1 2 3; do
+            sudo apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 && { ok=1; break; }
+            echo "apt update 失败，第 $i 次重试"; sleep 10
+          done
+          [ "$ok" = "1" ] || { echo "apt update 三次均失败"; exit 1; }
+          ok=0
+          for i in 1 2 3; do
+            sudo apt-get install -y -o Acquire::Retries=5 -o Acquire::http::Timeout=30 \
+              git make clang lld llvm libplist-utils zip unzip curl xz-utils perl && { ok=1; break; }
+            echo "apt install 失败，第 $i 次重试"; sleep 10
+          done
+          [ "$ok" = "1" ] || { echo "apt install 三次均失败"; exit 1; }
+          clang --version | head -n1
+          which ld64.lld llvm-ranlib llvm-strip llvm-ar || true
 
       - name: theos
         run: |
