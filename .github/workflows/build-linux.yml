@@ -24,24 +24,32 @@ jobs:
           path: src
 
       - name: deps
-        timeout-minutes: 15
+        timeout-minutes: 8
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          ok=0
-          for i in 1 2 3; do
-            sudo apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 && { ok=1; break; }
-            echo "apt update 失败，第 $i 次重试"; sleep 10
-          done
-          [ "$ok" = "1" ] || { echo "apt update 三次均失败"; exit 1; }
-          ok=0
-          for i in 1 2 3; do
-            sudo apt-get install -y -o Acquire::Retries=5 -o Acquire::http::Timeout=30 \
-              git make clang lld llvm libplist-utils zip unzip curl xz-utils perl && { ok=1; break; }
-            echo "apt install 失败，第 $i 次重试"; sleep 10
-          done
-          [ "$ok" = "1" ] || { echo "apt install 三次均失败"; exit 1; }
-          clang --version | head -n1
-          which ld64.lld llvm-ranlib llvm-strip llvm-ar || true
+          # GitHub 的 ubuntu-22.04 镜像已预装 clang / llvm / llvm-ranlib / llvm-strip / llvm-ar，
+          # 这里只在缺 ld64.lld 时补装 lld（不跑 apt-get update，避免镜像抖动）
+          echo "== 预装工具 =="
+          clang --version | head -n1 || true
+          command -v llvm-ranlib || command -v llvm-ranlib-14 || true
+          command -v llvm-strip || command -v llvm-strip-14 || true
+          command -v llvm-ar || command -v llvm-ar-14 || true
+          command -v ld64.lld || command -v ld64.lld-14 || true
+
+          if ! command -v ld64.lld >/dev/null 2>&1 && ! command -v ld64.lld-14 >/dev/null 2>&1; then
+            echo "缺少 ld64.lld，尝试最小化安装 lld"
+            sudo apt-get install -y --no-install-recommends lld-14 || \
+            sudo apt-get install -y --no-install-recommends lld || true
+          fi
+
+          # 让 clang -fuse-ld=lld 一定能找到 ld64.lld
+          if ! command -v ld64.lld >/dev/null 2>&1; then
+            FOUND=$(command -v ld64.lld-14 || command -v ld64.lld-15 || true)
+            if [ -n "$FOUND" ]; then
+              sudo ln -sf "$FOUND" /usr/local/bin/ld64.lld
+            fi
+          fi
+          command -v ld64.lld && ld64.lld --version || echo "警告：ld64.lld 仍未就绪"
 
       - name: theos
         run: |
