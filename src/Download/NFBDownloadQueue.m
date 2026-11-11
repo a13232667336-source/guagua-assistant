@@ -40,11 +40,10 @@
 
 - (void)notifyChange {
     void (^handler)(void) = self.changeHandler;
-    if (handler == nil) {
-        return;
-    }
     dispatch_async(dispatch_get_main_queue(), ^{
-        handler();
+        if (handler != nil) {
+            handler();
+        }
         [[NFBDownloadQueuePanel shared] refresh];
     });
 }
@@ -101,6 +100,43 @@
         [[NFBProgressBar shared] showWithTitle:runTitle];
     });
 
+    if (task.durationMs > 0) {
+        [self startSessionForTask:task duration:task.durationMs];
+        return;
+    }
+
+    // 没有时长：先从参数里取出源地址，探测一次（否则百分比永远是 …）
+    NSString* sourceURLString = nil;
+    NSArray<NSString*>* tokens = [task.args componentsSeparatedByString:@" "];
+    for (NSUInteger i = 0; i + 1 < tokens.count; i++) {
+        if ([tokens[i] isEqualToString:@"-i"]) {
+            sourceURLString = tokens[i + 1];
+            break;
+        }
+    }
+    NSURL* probeURL = sourceURLString.length ? [NSURL URLWithString:sourceURLString] : nil;
+    if (probeURL == nil) {
+        [self startSessionForTask:task duration:0];
+        return;
+    }
+
+    __weak NFBDownloadQueue* weakSelf = self;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        double resolved = 0;
+        @try {
+            MediaInformation* info = [BHTManager getM3U8Information:probeURL];
+            resolved = [info getDuration].doubleValue * 1000.0;
+        } @catch (__unused NSException* exception) {
+        }
+        task.durationMs = resolved;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf startSessionForTask:task duration:resolved];
+        });
+    });
+}
+
+- (void)startSessionForTask:(NFBDownloadTask*)task duration:(double)durationMs {
+
     NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
         URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@", NSUUID.UUID.UUIDString,
                                                                task.ext]];
@@ -146,8 +182,7 @@
             double processed = [statistics getTime];
             long long bytes = [statistics getSize];
             task.bytes = bytes;
-            task.progress = task.durationMs > 0 ? MAX(0.0, MIN(1.0, processed / task.durationMs))
-                                                : 0.0;
+            task.progress = durationMs > 0 ? MAX(0.0, MIN(1.0, processed / durationMs)) : 0.0;
             [[NFBProgressBar shared] setProgress:task.progress
                                           detail:[NSByteCountFormatter
                                                      stringFromByteCount:bytes
