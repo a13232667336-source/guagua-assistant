@@ -16,6 +16,7 @@ static const NSInteger kStatusTag = 2002;
 static const NSInteger kTrackTag = 2003;
 static const NSInteger kFillTag = 2004;
 static const NSInteger kSizeTag = 2005;
+static const NSInteger kPercentTag = 2006;
 
 @interface NFBProgressBar ()
 @property (nonatomic, strong) UIView* card;
@@ -112,6 +113,13 @@ static const NSInteger kSizeTag = 2005;
         size.textAlignment = NSTextAlignmentRight;
         [row addSubview:size];
 
+        UILabel* percent = [[UILabel alloc] initWithFrame:CGRectZero];
+        percent.tag = kPercentTag;
+        percent.font = [UIFont monospacedDigitSystemFontOfSize:10.5 weight:UIFontWeightMedium];
+        percent.textColor = [UIColor colorWithWhite:1.0 alpha:0.85];
+        percent.textAlignment = NSTextAlignmentRight;
+        [row addSubview:percent];
+
         UIView* track = [[UIView alloc] initWithFrame:CGRectZero];
         track.tag = kTrackTag;
         track.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.16];
@@ -157,6 +165,7 @@ static const NSInteger kSizeTag = 2005;
             UILabel* title = (UILabel*)[row viewWithTag:kTitleTag];
             UILabel* status = (UILabel*)[row viewWithTag:kStatusTag];
             UILabel* size = (UILabel*)[row viewWithTag:kSizeTag];
+            UILabel* percentLabel = (UILabel*)[row viewWithTag:kPercentTag];
             UIView* track = [row viewWithTag:kTrackTag];
             UIView* fill = [row viewWithTag:kFillTag];
 
@@ -177,8 +186,12 @@ static const NSInteger kSizeTag = 2005;
             size.text = info[@"size"];
             size.frame = CGRectMake(statusX - gap - sizeWidth, 0, sizeWidth, rowHeight);
 
+            CGFloat percentWidth = 34.0;
             CGFloat trackX = leftInset + titleWidth + 8.0;
-            CGFloat trackWidth = size.frame.origin.x - gap - trackX;
+            percentLabel.text = info[@"percent"];
+            percentLabel.frame = CGRectMake(size.frame.origin.x - gap - percentWidth, 0,
+                                            percentWidth, rowHeight);
+            CGFloat trackWidth = percentLabel.frame.origin.x - gap - trackX;
             if (trackWidth < 60.0) {
                 trackWidth = 60.0;
             }

@@ -323,9 +323,16 @@
             if (sizeText.length > 0) {
                 task.lastSizeText = sizeText;
             }
+            NSString* percentText = @"";
+            if (task.state == NFBDownloadStateRunning) {
+                percentText = [NSString stringWithFormat:@"%.0f%%", task.progress * 100];
+            } else if (task.state == NFBDownloadStateDone) {
+                percentText = @"100%";
+            }
             [rows addObject:@{
                 @"title" : task.title ?: @"视频",
                 @"status" : status,
+                @"percent" : percentText,
                 @"size" : sizeText,
                 @"progress" : @(task.progress)
             }];
