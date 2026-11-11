@@ -2,22 +2,24 @@
 //  NFBProgressBar.m
 //  呱呱助手
 //
-//  下载只用一个「队列卡片」显示（不再有顶部胶囊）：
-//    视频①              下载中
-//    ▓▓▓▓▓░░░░░░░░░░░░░░░░░░
-//    视频②              排队中
-//    ░░░░░░░░░░░░░░░░░░░░░░
-//  全部任务结束后卡片自动消失。
+//  下载队列卡片（扁平长条）：
+//    视频①  ▓▓▓▓░░░░  12.3/45.6 MB   下载中
+//    视频②  ░░░░░░░░░  45.6 MB       正在排队
+//  只做展示，逻辑与队列无关。
 //
 
 #import "Download/NFBProgressBar.h"
 #import <QuartzCore/QuartzCore.h>
 
+static const NSInteger kTitleTag = 2001;
+static const NSInteger kStatusTag = 2002;
+static const NSInteger kTrackTag = 2003;
+static const NSInteger kFillTag = 2004;
+static const NSInteger kSizeTag = 2005;
+
 @interface NFBProgressBar ()
 @property (nonatomic, strong) UIView* card;
 @property (nonatomic, strong) NSMutableArray<UIView*>* rows;
-@property (nonatomic, strong) NSMutableArray<UIView*>* fills;
-@property (nonatomic, strong) NSMutableArray<UILabel*>* statusLabels;
 @end
 
 @implementation NFBProgressBar
@@ -28,8 +30,6 @@
     dispatch_once(&once, ^{
         bar = [NFBProgressBar new];
         bar.rows = [NSMutableArray array];
-        bar.fills = [NSMutableArray array];
-        bar.statusLabels = [NSMutableArray array];
     });
     return bar;
 }
@@ -48,41 +48,86 @@
     return nil;
 }
 
-#pragma mark - 兼容旧接口（胶囊已移除）
+#pragma mark - 兼容旧接口（顶部胶囊已移除）
 
 - (void)showWithTitle:(NSString*)title {
-    // 顶部胶囊已按需求移除，进度统一由队列卡片展示
 }
 
 - (void)setProgress:(CGFloat)progress detail:(NSString*)detail {
-    // 同上：进度由 updateQueueRows 驱动
 }
 
 - (void)showSuccessWithText:(NSString*)text {
-    // 完成状态在队列卡片里以“已完成”显示，不再弹胶囊
 }
 
 - (void)hide {
     [self hideCard];
 }
 
-#pragma mark - 队列卡片
+#pragma mark - 卡片
+
+- (CGFloat)cardWidth {
+    CGFloat screenWidth = CGRectGetWidth(UIScreen.mainScreen.bounds);
+    return MIN(screenWidth - 24.0, 430.0);
+}
 
 - (void)buildCardIfNeeded {
     if (self.card != nil) {
         return;
     }
-    UIView* card = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 240, 80)];
+    UIView* card = [[UIView alloc] initWithFrame:CGRectZero];
     card.backgroundColor = [UIColor colorWithWhite:0.10 alpha:0.96];
-    card.layer.cornerRadius = 14.0;
+    card.layer.cornerRadius = 16.0;
     card.layer.cornerCurve = kCACornerCurveContinuous;
     card.layer.shadowColor = [UIColor blackColor].CGColor;
-    card.layer.shadowOpacity = 0.35;
+    card.layer.shadowOpacity = 0.32;
     card.layer.shadowRadius = 10.0;
     card.layer.shadowOffset = CGSizeMake(0, 3);
     card.alpha = 0.0;
     card.hidden = YES;
     self.card = card;
+}
+
+- (UIView*)rowAtIndex:(NSInteger)index width:(CGFloat)width {
+    while ((NSInteger)self.rows.count <= index) {
+        UIView* row = [[UIView alloc] initWithFrame:CGRectZero];
+        row.backgroundColor = [UIColor clearColor];
+
+        UILabel* title = [[UILabel alloc] initWithFrame:CGRectZero];
+        title.tag = kTitleTag;
+        title.font = [UIFont systemFontOfSize:14.0 weight:UIFontWeightSemibold];
+        title.textColor = [UIColor whiteColor];
+        [row addSubview:title];
+
+        UILabel* status = [[UILabel alloc] initWithFrame:CGRectZero];
+        status.tag = kStatusTag;
+        status.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
+        status.textColor = [UIColor colorWithWhite:1.0 alpha:0.72];
+        status.textAlignment = NSTextAlignmentRight;
+        [row addSubview:status];
+
+        UILabel* size = [[UILabel alloc] initWithFrame:CGRectZero];
+        size.tag = kSizeTag;
+        size.font = [UIFont systemFontOfSize:11.0 weight:UIFontWeightRegular];
+        size.textColor = [UIColor colorWithWhite:1.0 alpha:0.58];
+        size.textAlignment = NSTextAlignmentRight;
+        [row addSubview:size];
+
+        UIView* track = [[UIView alloc] initWithFrame:CGRectZero];
+        track.tag = kTrackTag;
+        track.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.16];
+        track.layer.cornerRadius = 1.5;
+        [row addSubview:track];
+
+        UIView* fill = [[UIView alloc] initWithFrame:CGRectZero];
+        fill.tag = kFillTag;
+        fill.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.95];
+        fill.layer.cornerRadius = 1.5;
+        [track addSubview:fill];
+
+        [self.card addSubview:row];
+        [self.rows addObject:row];
+    }
+    return self.rows[index];
 }
 
 - (void)updateQueueRows:(NSArray<NSDictionary*>*)rows {
@@ -93,102 +138,65 @@
         }
         [self buildCardIfNeeded];
 
-        // 复用已有行，避免每帧重建导致闪烁
+        // 多余的行先移除
         while ((NSInteger)self.rows.count > (NSInteger)rows.count) {
             UIView* last = self.rows.lastObject;
             [last removeFromSuperview];
             [self.rows removeLastObject];
-            if (self.fills.count > 0) {
-                [self.fills removeLastObject];
-            }
-            if (self.statusLabels.count > 0) {
-                [self.statusLabels removeLastObject];
-            }
         }
 
-        CGFloat width = 240.0;
-        CGFloat rowHeight = 46.0;
-        CGFloat padding = 10.0;
+        CGFloat width = [self cardWidth];
+        CGFloat rowHeight = 30.0;
+        CGFloat topPadding = 8.0;
 
         for (NSInteger index = 0; index < (NSInteger)rows.count; index++) {
             NSDictionary* info = rows[index];
+            UIView* row = [self rowAtIndex:index width:width];
+            row.frame = CGRectMake(0, topPadding + index * rowHeight, width, rowHeight);
 
-            UIView* row = nil;
-            if (index < (NSInteger)self.rows.count) {
-                row = self.rows[index];
-            } else {
-                row = [[UIView alloc] initWithFrame:CGRectZero];
-                row.backgroundColor = [UIColor clearColor];
+            UILabel* title = (UILabel*)[row viewWithTag:kTitleTag];
+            UILabel* status = (UILabel*)[row viewWithTag:kStatusTag];
+            UILabel* size = (UILabel*)[row viewWithTag:kSizeTag];
+            UIView* track = [row viewWithTag:kTrackTag];
+            UIView* fill = [row viewWithTag:kFillTag];
 
-                UILabel* title = [[UILabel alloc] initWithFrame:CGRectZero];
-                title.tag = 1001;
-                title.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
-                title.textColor = [UIColor whiteColor];
-                [row addSubview:title];
-
-                UILabel* status = [[UILabel alloc] initWithFrame:CGRectZero];
-                status.tag = 1002;
-                status.font = [UIFont systemFontOfSize:13.5 weight:UIFontWeightRegular];
-                status.textColor = [UIColor colorWithWhite:1.0 alpha:0.7];
-                status.textAlignment = NSTextAlignmentRight;
-                [row addSubview:status];
-
-                UILabel* size = [[UILabel alloc] initWithFrame:CGRectZero];
-                size.tag = 1005;
-                size.font = [UIFont systemFontOfSize:10.5 weight:UIFontWeightRegular];
-                size.textColor = [UIColor colorWithWhite:1.0 alpha:0.60];
-                size.textAlignment = NSTextAlignmentRight;
-                [row addSubview:size];
-
-                UIView* track = [[UIView alloc] initWithFrame:CGRectZero];
-                track.tag = 1003;
-                track.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.16];
-                track.layer.cornerRadius = 1.0;
-                [row addSubview:track];
-
-                UIView* fill = [[UIView alloc] initWithFrame:CGRectZero];
-                fill.tag = 1004;
-                fill.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.95];
-                fill.layer.cornerRadius = 1.0;
-                [track addSubview:fill];
-
-                [self.card addSubview:row];
-                [self.rows addObject:row];
-                [self.fills addObject:fill];
-                [self.statusLabels addObject:status];
-            }
-
-            CGFloat top = padding + index * rowHeight;
-            row.frame = CGRectMake(0, top, width, rowHeight);
-
-            UILabel* title = (UILabel*)[row viewWithTag:1001];
-            UILabel* status = (UILabel*)[row viewWithTag:1002];
-            UIView* track = [row viewWithTag:1003];
-            UIView* fill = [row viewWithTag:1004];
+            // 一行：标题 ｜ 进度条 ｜ 大小 ｜ 状态
+            CGFloat titleWidth = 74.0;
+            CGFloat statusWidth = 66.0;
+            CGFloat sizeWidth = 104.0;
+            CGFloat leftInset = 14.0;
+            CGFloat gap = 10.0;
 
             title.text = info[@"title"];
-            title.frame = CGRectMake(16, 6, 150, 18);
+            title.frame = CGRectMake(leftInset, 0, titleWidth, rowHeight);
+
+            CGFloat statusX = width - leftInset - statusWidth;
             status.text = info[@"status"];
-            status.frame = CGRectMake(width - 110, 7, 94, 16);
+            status.frame = CGRectMake(statusX, 0, statusWidth, rowHeight);
+
+            size.text = info[@"size"];
+            size.frame = CGRectMake(statusX - gap - sizeWidth, 0, sizeWidth, rowHeight);
+
+            CGFloat trackX = leftInset + titleWidth + 8.0;
+            CGFloat trackWidth = size.frame.origin.x - gap - trackX;
+            if (trackWidth < 40.0) {
+                trackWidth = 40.0;
+            }
+            track.frame = CGRectMake(trackX, (rowHeight - 3.0) / 2.0, trackWidth, 3.0);
 
             CGFloat progress = [info[@"progress"] doubleValue];
             NSString* statusText = info[@"status"] ?: @"";
             BOOL done = [statusText containsString:@"已完成"];
             CGFloat ratio = done ? 1.0 : MAX(0.0, MIN(1.0, progress));
-
-            UILabel* sizeLabel = (UILabel*)[row viewWithTag:1005];
-            sizeLabel.text = info[@"size"];
-            sizeLabel.frame = CGRectMake(width - 176, 22, 160, 13);
-            track.frame = CGRectMake(16, 38, width - 32, 2.0);
-            fill.frame = CGRectMake(0, 0, (width - 32) * ratio, 2.0);
+            fill.frame = CGRectMake(0, 0, trackWidth * ratio, 3.0);
         }
 
-        CGFloat height = padding * 2.0 + rows.count * rowHeight;
-        [self presentCardWithHeight:height];
+        CGFloat height = topPadding * 2.0 + rows.count * rowHeight - 4.0;
+        [self presentCardWithWidth:width height:height];
     });
 }
 
-- (void)presentCardWithHeight:(CGFloat)height {
+- (void)presentCardWithWidth:(CGFloat)width height:(CGFloat)height {
     UIWindow* window = [self keyWindow];
     if (window == nil) {
         return;
@@ -198,12 +206,11 @@
         [window addSubview:self.card];
     }
 
-    CGFloat width = 240.0;
-    CGFloat top = window.safeAreaInsets.top + 8.0;
+    CGFloat top = window.safeAreaInsets.top + 6.0;
     self.card.hidden = NO;
     self.card.frame = CGRectMake(CGRectGetMidX(window.bounds) - width / 2.0, top, width, height);
     self.card.layer.shadowPath =
-        [UIBezierPath bezierPathWithRoundedRect:self.card.bounds cornerRadius:14.0].CGPath;
+        [UIBezierPath bezierPathWithRoundedRect:self.card.bounds cornerRadius:16.0].CGPath;
     [window bringSubviewToFront:self.card];
 
     if (self.card.alpha < 0.99) {
@@ -230,8 +237,6 @@
                 [row removeFromSuperview];
             }
             [self.rows removeAllObjects];
-            [self.fills removeAllObjects];
-            [self.statusLabels removeAllObjects];
         }];
 }
 
