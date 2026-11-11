@@ -10,6 +10,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// 顶部细长进度条：替代原来的居中转圈 HUD，下载时显示百分比与进度。
 @interface NFBProgressBar : NSObject
 
+@property (nonatomic, copy, nullable) NSString* subtitlePrefix;
+
 + (instancetype)shared;
 
 - (void)showWithTitle:(NSString*)title;

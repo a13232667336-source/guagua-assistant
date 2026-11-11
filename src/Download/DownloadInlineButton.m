@@ -8,6 +8,10 @@
 
 #import "Download/DownloadInlineButton.h"
 #import "Download/NFBProgressBar.h"
+
+// 批量下载（一键下载全部）时的序号状态
+static NSInteger gNFBBatchIndex = 0;
+static BOOL gNFBBatchActive = NO;
 #import <objc/runtime.h>
 #import "Core/BHTBundle.h"
 #import "Core/BHTSettings.h"
@@ -80,7 +84,13 @@ static UIViewController* TopMostController(void) {
             }
 
             void (^startWithDuration)(double) = ^(double resolvedDuration) {
-                showHUD(downloadingText);
+                NSString* runTitle = downloadingText;
+                if (gNFBBatchActive) {
+                    gNFBBatchIndex += 1;
+                    runTitle = [NSString stringWithFormat:@"正在下载 %ld",
+                                                          (long)gNFBBatchIndex];
+                }
+                showHUD(runTitle);
                 NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
                     URLByAppendingPathComponent:[NSString
                                                     stringWithFormat:@"%@.%@",
@@ -93,6 +103,10 @@ static UIViewController* TopMostController(void) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             NSString* doneText =
                                 [[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"];
+                            if (gNFBBatchActive) {
+                                doneText = [NSString stringWithFormat:@"视频 %ld 下载已完成",
+                                                                      (long)gNFBBatchIndex];
+                            }
                             UINotificationFeedbackGenerator* feedback =
                                 [UINotificationFeedbackGenerator new];
                             [feedback prepare];
@@ -390,10 +404,13 @@ static UIViewController* TopMostController(void) {
                                                  @"DOWNLOAD_ALL_VIDEOS_OPTION_TITLE"]
                                                imageName:@"arrow_down_circle_stroke"
                                                   action:^{
+                                                      gNFBBatchActive = YES;
+                                                      gNFBBatchIndex = 0;
                                                       __block void (^downloadNext)(NSUInteger);
                                                       downloadNext = ^(NSUInteger idx) {
                                                           if (idx >= queue.count) {
                                                               downloadNext = nil;
+                                                              gNFBBatchActive = NO;
                                                               return;
                                                           }
                                                           NSURL* url = bestMP4URL(queue[idx]);

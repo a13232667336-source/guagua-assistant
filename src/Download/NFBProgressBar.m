@@ -107,7 +107,7 @@
     UILabel* done = [[UILabel alloc] initWithFrame:CGRectMake(0.0, 0.0, 200.0, 44.0)];
     done.text = @"下载完成";
     done.textAlignment = NSTextAlignmentCenter;
-    done.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
+    done.font = [UIFont systemFontOfSize:14.5 weight:UIFontWeightSemibold];
     done.textColor = [UIColor whiteColor];
     [successGroup addSubview:done];
 
@@ -187,6 +187,7 @@
     self.successGroup.hidden = YES;
 
     NSString* prefix = title.length ? title : @"正在下载";
+    self.subtitlePrefix = prefix;
     self.sizeLabel.text = [NSString stringWithFormat:@"%@ 0 MB", prefix];
     self.percentLabel.text = @"0%";
     self.percentLabel.textColor = [UIColor colorWithWhite:1.0 alpha:0.8];
@@ -209,7 +210,8 @@
             return;  // 已完成，别再被进度覆盖
         }
         if (detail.length > 0) {
-            self.sizeLabel.text = [NSString stringWithFormat:@"正在下载 %@", detail];
+            NSString* prefix = self.subtitlePrefix.length ? self.subtitlePrefix : @"正在下载";
+            self.sizeLabel.text = [NSString stringWithFormat:@"%@ %@", prefix, detail];
         }
         if (clamped > 0.001) {
             [self stopSweep];
@@ -227,7 +229,7 @@
     [self stopSweep];
 
     // 换成大一号的“完成”样式
-    self.container.bounds = CGRectMake(0, 0, 200.0, 44.0);
+    self.container.bounds = CGRectMake(0, 0, 236.0, 46.0);
     self.container.layer.cornerRadius = 14.0;
     self.progressGroup.hidden = YES;
     self.successGroup.hidden = NO;
@@ -236,7 +238,7 @@
         if ([sub isKindOfClass:[UILabel class]]) {
             ((UILabel*)sub).text = text.length ? text : @"下载完成";
             ((UILabel*)sub).textAlignment = NSTextAlignmentCenter;
-            sub.frame = CGRectMake(0.0, 0.0, capsuleWidth, 44.0);
+            sub.frame = CGRectMake(0.0, 0.0, capsuleWidth, 46.0);
         } else {
             sub.frame = CGRectMake(14.0, 12.0, 20.0, 20.0);
         }
