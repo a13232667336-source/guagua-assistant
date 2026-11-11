@@ -67,7 +67,7 @@ static const NSInteger kSizeTag = 2005;
 
 - (CGFloat)cardWidth {
     CGFloat screenWidth = CGRectGetWidth(UIScreen.mainScreen.bounds);
-    return MIN(screenWidth - 24.0, 430.0);
+    return MIN(screenWidth - 96.0, 360.0);
 }
 
 - (void)buildCardIfNeeded {
@@ -94,20 +94,20 @@ static const NSInteger kSizeTag = 2005;
 
         UILabel* title = [[UILabel alloc] initWithFrame:CGRectZero];
         title.tag = kTitleTag;
-        title.font = [UIFont systemFontOfSize:14.0 weight:UIFontWeightSemibold];
+        title.font = [UIFont systemFontOfSize:13.0 weight:UIFontWeightSemibold];
         title.textColor = [UIColor whiteColor];
         [row addSubview:title];
 
         UILabel* status = [[UILabel alloc] initWithFrame:CGRectZero];
         status.tag = kStatusTag;
-        status.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
+        status.font = [UIFont systemFontOfSize:11.0 weight:UIFontWeightRegular];
         status.textColor = [UIColor colorWithWhite:1.0 alpha:0.72];
         status.textAlignment = NSTextAlignmentRight;
         [row addSubview:status];
 
         UILabel* size = [[UILabel alloc] initWithFrame:CGRectZero];
         size.tag = kSizeTag;
-        size.font = [UIFont systemFontOfSize:11.0 weight:UIFontWeightRegular];
+        size.font = [UIFont systemFontOfSize:9.5 weight:UIFontWeightRegular];
         size.textColor = [UIColor colorWithWhite:1.0 alpha:0.58];
         size.textAlignment = NSTextAlignmentRight;
         [row addSubview:size];
@@ -146,8 +146,8 @@ static const NSInteger kSizeTag = 2005;
         }
 
         CGFloat width = [self cardWidth];
-        CGFloat rowHeight = 30.0;
-        CGFloat topPadding = 8.0;
+        CGFloat rowHeight = 26.0;
+        CGFloat topPadding = 6.0;
 
         for (NSInteger index = 0; index < (NSInteger)rows.count; index++) {
             NSDictionary* info = rows[index];
@@ -161,11 +161,11 @@ static const NSInteger kSizeTag = 2005;
             UIView* fill = [row viewWithTag:kFillTag];
 
             // 一行：标题 ｜ 进度条 ｜ 大小 ｜ 状态
-            CGFloat titleWidth = 74.0;
-            CGFloat statusWidth = 66.0;
-            CGFloat sizeWidth = 104.0;
-            CGFloat leftInset = 14.0;
-            CGFloat gap = 10.0;
+            CGFloat titleWidth = 56.0;
+            CGFloat statusWidth = 52.0;
+            CGFloat sizeWidth = 82.0;
+            CGFloat leftInset = 10.0;
+            CGFloat gap = 6.0;
 
             title.text = info[@"title"];
             title.frame = CGRectMake(leftInset, 0, titleWidth, rowHeight);
@@ -179,16 +179,16 @@ static const NSInteger kSizeTag = 2005;
 
             CGFloat trackX = leftInset + titleWidth + 8.0;
             CGFloat trackWidth = size.frame.origin.x - gap - trackX;
-            if (trackWidth < 40.0) {
-                trackWidth = 40.0;
+            if (trackWidth < 60.0) {
+                trackWidth = 60.0;
             }
-            track.frame = CGRectMake(trackX, (rowHeight - 3.0) / 2.0, trackWidth, 3.0);
+            track.frame = CGRectMake(trackX, (rowHeight - 4.0) / 2.0, trackWidth, 4.0);
 
             CGFloat progress = [info[@"progress"] doubleValue];
             NSString* statusText = info[@"status"] ?: @"";
             BOOL done = [statusText containsString:@"已完成"];
             CGFloat ratio = done ? 1.0 : MAX(0.0, MIN(1.0, progress));
-            fill.frame = CGRectMake(0, 0, trackWidth * ratio, 3.0);
+            fill.frame = CGRectMake(0, 0, trackWidth * ratio, 4.0);
         }
 
         CGFloat height = topPadding * 2.0 + rows.count * rowHeight - 4.0;
