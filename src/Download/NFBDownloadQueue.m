@@ -211,6 +211,17 @@
 
             dispatch_async(saveQueue, ^{
                 if (success) {
+                    // 小文件下载太快时 FFmpeg 统计可能一次都没回调，这里用落盘大小兜底
+                    NSDictionary* attrs = [[NSFileManager defaultManager]
+                        attributesOfItemAtPath:outFile.path
+                                         error:nil];
+                    long long fileSize = [attrs[NSFileSize] longLongValue];
+                    if (fileSize > 0) {
+                        task.bytes = fileSize;
+                        if (task.totalBytes < fileSize) {
+                            task.totalBytes = fileSize;
+                        }
+                    }
                     if ([task.ext isEqualToString:@"gif"]) {
                         [BHTManager saveGIF:outFile];
                     } else {
@@ -227,6 +238,13 @@
                         [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
                         task.state = NFBDownloadStateDone;
                         task.progress = 1.0;
+                        // 兜底：确保完成后一定有大小文案可显示
+                        long long finalBytes = task.totalBytes > 0 ? task.totalBytes : task.bytes;
+                        if (finalBytes > 0) {
+                            task.lastSizeText = [NSByteCountFormatter
+                                stringFromByteCount:finalBytes
+                                         countStyle:NSByteCountFormatterCountStyleFile];
+                        }
                     } else {
                         [feedback notificationOccurred:UINotificationFeedbackTypeError];
                         task.state = NFBDownloadStateFailed;
@@ -272,9 +290,18 @@
                 status = @"下载失败";
             }
             NSString* sizeText = @"";
-            if (task.state == NFBDownloadStateDone && task.lastSizeText.length > 0) {
+            if (task.state == NFBDownloadStateDone) {
                 // 完成后保持下载过程中显示的大小文案，直到卡片消失
-                sizeText = task.lastSizeText;
+                if (task.lastSizeText.length > 0) {
+                    sizeText = task.lastSizeText;
+                } else {
+                    long long finalBytes = task.totalBytes > 0 ? task.totalBytes : task.bytes;
+                    if (finalBytes > 0) {
+                        sizeText = [NSByteCountFormatter
+                            stringFromByteCount:finalBytes
+                                     countStyle:NSByteCountFormatterCountStyleFile];
+                    }
+                }
             } else if (task.bytes > 0) {
                 NSString* got = [NSByteCountFormatter stringFromByteCount:task.bytes
                                                                countStyle:NSByteCountFormatterCountStyleFile];
