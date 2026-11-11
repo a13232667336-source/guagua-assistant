@@ -241,9 +241,13 @@
                         // 兜底：确保完成后一定有大小文案可显示
                         long long finalBytes = task.totalBytes > 0 ? task.totalBytes : task.bytes;
                         if (finalBytes > 0) {
-                            task.lastSizeText = [NSByteCountFormatter
-                                stringFromByteCount:finalBytes
-                                         countStyle:NSByteCountFormatterCountStyleFile];
+                            NSString* finalText =
+                                [NSByteCountFormatter stringFromByteCount:finalBytes
+                                                               countStyle:NSByteCountFormatterCountStyleFile];
+                            task.bytes = finalBytes;
+                            task.totalBytes = finalBytes;
+                            task.lastSizeText =
+                                [NSString stringWithFormat:@"%@ / %@", finalText, finalText];
                         }
                     } else {
                         [feedback notificationOccurred:UINotificationFeedbackTypeError];
@@ -297,9 +301,10 @@
                 } else {
                     long long finalBytes = task.totalBytes > 0 ? task.totalBytes : task.bytes;
                     if (finalBytes > 0) {
-                        sizeText = [NSByteCountFormatter
-                            stringFromByteCount:finalBytes
-                                     countStyle:NSByteCountFormatterCountStyleFile];
+                        NSString* finalText =
+                            [NSByteCountFormatter stringFromByteCount:finalBytes
+                                                           countStyle:NSByteCountFormatterCountStyleFile];
+                        sizeText = [NSString stringWithFormat:@"%@ / %@", finalText, finalText];
                     }
                 }
             } else if (task.bytes > 0) {

@@ -107,7 +107,7 @@ static const NSInteger kSizeTag = 2005;
 
         UILabel* size = [[UILabel alloc] initWithFrame:CGRectZero];
         size.tag = kSizeTag;
-        size.font = [UIFont systemFontOfSize:9.5 weight:UIFontWeightRegular];
+        size.font = [UIFont systemFontOfSize:9.0 weight:UIFontWeightRegular];
         size.textColor = [UIColor colorWithWhite:1.0 alpha:0.58];
         size.textAlignment = NSTextAlignmentRight;
         [row addSubview:size];
@@ -163,7 +163,7 @@ static const NSInteger kSizeTag = 2005;
             // 一行：标题 ｜ 进度条 ｜ 大小 ｜ 状态
             CGFloat titleWidth = 56.0;
             CGFloat statusWidth = 52.0;
-            CGFloat sizeWidth = 82.0;
+            CGFloat sizeWidth = 104.0;
             CGFloat leftInset = 10.0;
             CGFloat gap = 6.0;
 
