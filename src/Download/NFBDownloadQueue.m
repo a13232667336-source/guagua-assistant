@@ -285,9 +285,8 @@
         for (NFBDownloadTask* task in self.taskList) {
             NSString* status = @"正在排队";
             if (task.state == NFBDownloadStateRunning) {
-                status = task.progress > 0.001
-                             ? [NSString stringWithFormat:@"下载中 %.0f%%", task.progress * 100]
-                             : @"下载中";
+                // 状态文字固定为「下载中」，不带百分比，避免数字一直跳动
+                status = @"下载中";
             } else if (task.state == NFBDownloadStateDone) {
                 status = @"已完成";
             } else if (task.state == NFBDownloadStateFailed) {
