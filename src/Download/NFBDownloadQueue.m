@@ -5,7 +5,6 @@
 
 #import "Download/NFBDownloadQueue.h"
 #import "Download/NFBProgressBar.h"
-#import "Download/NFBDownloadQueuePanel.h"
 #import "Core/BHTBundle.h"
 #import "Core/BHTSettings.h"
 #import "Core/BHTManager.h"
@@ -44,7 +43,7 @@
         if (handler != nil) {
             handler();
         }
-        [[NFBDownloadQueuePanel shared] refresh];
+        [[NFBProgressBar shared] updateQueueRows:[self queueRows]];
     });
 }
 

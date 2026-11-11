@@ -19,7 +19,9 @@
 @property (nonatomic, strong) NSTimer* sweepTimer;
 @property (nonatomic, assign) CGFloat sweepValue;
 @property (nonatomic, assign) BOOL sweeping;
-@end
+@property (nonatomic, strong) UIView* queueView;
+@property (nonatomic, strong) NSMutableArray<UIView*>* queueRows;
+
 
 @implementation NFBProgressBar
 
@@ -275,5 +277,98 @@
                          }];
     });
 }
+
+#pragma mark - 队列列表（贴在顶部胶囊下方）
+
+- (void)updateQueueRows:(NSArray<NSDictionary*>*)rows {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (rows.count < 2) {
+            [self hideQueueView];
+            return;
+        }
+        [self buildQueueViewIfNeeded];
+
+        for (UIView* view in self.queueRows) {
+            [view removeFromSuperview];
+        }
+        [self.queueRows removeAllObjects];
+
+        CGFloat width = 240.0;
+        CGFloat rowHeight = 28.0;
+        NSInteger visible = MIN(rows.count, 4);
+        CGFloat height = visible * rowHeight + 10.0;
+
+        for (NSInteger index = 0; index < visible; index++) {
+            NSDictionary* info = rows[index];
+            UIView* row = [[UIView alloc] initWithFrame:CGRectMake(0, 5.0 + index * rowHeight, width, rowHeight)];
+            row.backgroundColor = [UIColor clearColor];
+
+            UILabel* title = [[UILabel alloc] initWithFrame:CGRectMake(14, 0, 120, rowHeight)];
+            title.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightMedium];
+            title.textColor = [UIColor whiteColor];
+            title.text = info[@"title"];
+            [row addSubview:title];
+
+            UILabel* status = [[UILabel alloc] initWithFrame:CGRectMake(width - 104, 0, 90, rowHeight)];
+            status.font = [UIFont systemFontOfSize:11.5 weight:UIFontWeightRegular];
+            status.textColor = [UIColor colorWithWhite:1.0 alpha:0.72];
+            status.textAlignment = NSTextAlignmentRight;
+            status.text = info[@"status"];
+            [row addSubview:status];
+
+            [self.queueView addSubview:row];
+            [self.queueRows addObject:row];
+        }
+
+        self.queueView.hidden = NO;
+        [self layoutQueueViewWithHeight:height];
+    });
+}
+
+- (void)buildQueueViewIfNeeded {
+    if (self.queueView != nil) {
+        return;
+    }
+    UIView* view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 240, 60)];
+    view.backgroundColor = [UIColor colorWithWhite:0.10 alpha:0.94];
+    view.layer.cornerRadius = 12.0;
+    view.layer.cornerCurve = kCACornerCurveContinuous;
+    view.layer.shadowColor = [UIColor blackColor].CGColor;
+    view.layer.shadowOpacity = 0.3;
+    view.layer.shadowRadius = 8.0;
+    view.layer.shadowOffset = CGSizeMake(0, 3);
+    view.hidden = YES;
+    self.queueView = view;
+    self.queueRows = [NSMutableArray array];
+}
+
+- (void)layoutQueueViewWithHeight:(CGFloat)height {
+    UIWindow* window = [self keyWindow];
+    if (window == nil) {
+        return;
+    }
+    if (self.queueView.superview != window) {
+        [self.queueView removeFromSuperview];
+        [window addSubview:self.queueView];
+    }
+    CGFloat width = 240.0;
+    CGFloat top = CGRectGetMaxY(self.container.frame) + 6.0;
+    if (top < 60.0) {
+        top = window.safeAreaInsets.top + 50.0;
+    }
+    self.queueView.frame = CGRectMake(CGRectGetMidX(window.bounds) - width / 2.0, top, width, height);
+    [window bringSubviewToFront:self.queueView];
+    [window bringSubviewToFront:self.container];
+}
+
+- (void)hideQueueView {
+    if (self.queueView == nil || self.queueView.hidden) {
+        return;
+    }
+    self.queueView.hidden = YES;
+    [self.queueView removeFromSuperview];
+}
+
+@end
 
 @end

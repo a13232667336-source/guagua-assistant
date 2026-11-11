@@ -19,6 +19,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showSuccessWithText:(NSString*)text;
 - (void)hide;
 
+/// 在顶部胶囊下方显示队列：每项 @{@"title":…, @"status":…, @"progress":@(0..1)}
+- (void)updateQueueRows:(NSArray<NSDictionary*>*)rows;
+
 @end
 
 NS_ASSUME_NONNULL_END
