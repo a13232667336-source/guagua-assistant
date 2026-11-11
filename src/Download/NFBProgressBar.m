@@ -107,7 +107,7 @@
         }
 
         CGFloat width = 240.0;
-        CGFloat rowHeight = 42.0;
+        CGFloat rowHeight = 46.0;
         CGFloat padding = 10.0;
 
         for (NSInteger index = 0; index < (NSInteger)rows.count; index++) {
@@ -132,6 +132,13 @@
                 status.textColor = [UIColor colorWithWhite:1.0 alpha:0.7];
                 status.textAlignment = NSTextAlignmentRight;
                 [row addSubview:status];
+
+                UILabel* size = [[UILabel alloc] initWithFrame:CGRectZero];
+                size.tag = 1005;
+                size.font = [UIFont systemFontOfSize:10.5 weight:UIFontWeightRegular];
+                size.textColor = [UIColor colorWithWhite:1.0 alpha:0.60];
+                size.textAlignment = NSTextAlignmentRight;
+                [row addSubview:size];
 
                 UIView* track = [[UIView alloc] initWithFrame:CGRectZero];
                 track.tag = 1003;
@@ -169,7 +176,10 @@
             BOOL done = [statusText containsString:@"已完成"];
             CGFloat ratio = done ? 1.0 : MAX(0.0, MIN(1.0, progress));
 
-            track.frame = CGRectMake(16, 32, width - 32, 2.0);
+            UILabel* sizeLabel = (UILabel*)[row viewWithTag:1005];
+            sizeLabel.text = info[@"size"];
+            sizeLabel.frame = CGRectMake(width - 176, 22, 160, 13);
+            track.frame = CGRectMake(16, 38, width - 32, 2.0);
             fill.frame = CGRectMake(0, 0, (width - 32) * ratio, 2.0);
         }
 

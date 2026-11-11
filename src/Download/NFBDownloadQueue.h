@@ -22,6 +22,7 @@ typedef NS_ENUM(NSInteger, NFBDownloadState) {
 @property (nonatomic, assign) NFBDownloadState state;
 @property (nonatomic, assign) double progress;
 @property (nonatomic, assign) long long bytes;
+@property (nonatomic, assign) long long totalBytes;
 @end
 
 @interface NFBDownloadQueue : NSObject

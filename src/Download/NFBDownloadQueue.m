@@ -147,7 +147,50 @@
     });
 }
 
+// 直链 mp4 可以通过 HEAD 拿到文件总大小，HLS 拿不到就只显示已下载
+- (void)fetchTotalSizeForTask:(NFBDownloadTask*)task {
+    if (task.totalBytes > 0) {
+        return;
+    }
+    NSArray<NSString*>* tokens = [task.args componentsSeparatedByString:@" "];
+    NSString* urlString = nil;
+    for (NSUInteger i = 0; i + 1 < tokens.count; i++) {
+        if ([tokens[i] isEqualToString:@"-i"]) {
+            urlString = tokens[i + 1];
+            break;
+        }
+    }
+    if (urlString.length == 0 ||
+        [urlString containsString:@".m3u8"] ||
+        ![urlString hasPrefix:@"http"]) {
+        return;
+    }
+    NSURL* url = [NSURL URLWithString:urlString];
+    if (url == nil) {
+        return;
+    }
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
+    request.HTTPMethod = @"HEAD";
+    request.timeoutInterval = 10.0;
+    __weak NFBDownloadQueue* weakSelf = self;
+    NSURLSessionDataTask* dataTask =
+        [NSURLSession.sharedSession dataTaskWithRequest:request
+        completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+            if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                long long length = ((NSHTTPURLResponse*)response).expectedContentLength;
+                if (length > 0) {
+                    task.totalBytes = length;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf notifyChange];
+                    });
+                }
+            }
+        }];
+    [dataTask resume];
+}
+
 - (void)startSessionForTask:(NFBDownloadTask*)task duration:(double)durationMs {
+    [self fetchTotalSizeForTask:task];
 
     NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
         URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@", NSUUID.UUID.UUIDString,
@@ -228,9 +271,25 @@
             } else if (task.state == NFBDownloadStateFailed) {
                 status = @"下载失败";
             }
+            NSString* sizeText = @"";
+            if (task.bytes > 0) {
+                NSString* got = [NSByteCountFormatter stringFromByteCount:task.bytes
+                                                               countStyle:NSByteCountFormatterCountStyleFile];
+                if (task.totalBytes > task.bytes) {
+                    NSString* all = [NSByteCountFormatter stringFromByteCount:task.totalBytes
+                                                                   countStyle:NSByteCountFormatterCountStyleFile];
+                    sizeText = [NSString stringWithFormat:@"%@ / %@", got, all];
+                } else {
+                    sizeText = got;
+                }
+            } else if (task.totalBytes > 0) {
+                sizeText = [NSByteCountFormatter stringFromByteCount:task.totalBytes
+                                                          countStyle:NSByteCountFormatterCountStyleFile];
+            }
             [rows addObject:@{
                 @"title" : task.title ?: @"视频",
                 @"status" : status,
+                @"size" : sizeText,
                 @"progress" : @(task.progress)
             }];
         }
