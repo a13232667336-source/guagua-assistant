@@ -318,9 +318,7 @@ static UIViewController* TopMostController(void) {
                                                           if (!url) {
                                                               continue;
                                                           }
-                                                          NSString* title =
-                                                              [NSString stringWithFormat:@"视频%@",
-                                                                                         NFBCircledNumber(i + 1)];
+                                                          NSString* title = @"视频";
                                                           ffmpegDownload(
                                                               [NSString stringWithFormat:@"-i %@ -c copy",
                                                                                          url.absoluteString],
