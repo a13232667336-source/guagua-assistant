@@ -3,11 +3,13 @@
 //  呱呱助手
 //
 //  顶部深色进度提示：
-//    下载中 ---- 左侧「正在下载 1234.5 MB」，右侧百分比，下方 3pt 细条
-//    完成时   ---- 变成更大的一枚「✓ 下载完成」，绿色勾，停留 2.2 秒
+//    · 下载中：左侧「正在下载视频① 12.3 MB」，右侧百分比，下方 3pt 细条
+//    · 有多条任务时，胶囊下方再挂一个队列列表（视频① 下载中 45% / 视频② 排队中）
+//    · 全部结束：短暂显示「✓ xxx 下载已完成」，队列列表消失
 //
 
 #import "Download/NFBProgressBar.h"
+#import <QuartzCore/QuartzCore.h>
 
 @interface NFBProgressBar ()
 @property (nonatomic, strong) UIView* container;
@@ -16,12 +18,14 @@
 @property (nonatomic, strong) UILabel* sizeLabel;
 @property (nonatomic, strong) UILabel* percentLabel;
 @property (nonatomic, strong) UIProgressView* progressView;
+
 @property (nonatomic, strong) NSTimer* sweepTimer;
 @property (nonatomic, assign) CGFloat sweepValue;
 @property (nonatomic, assign) BOOL sweeping;
+
 @property (nonatomic, strong) UIView* queueView;
 @property (nonatomic, strong) NSMutableArray<UIView*>* queueRows;
-
+@end
 
 @implementation NFBProgressBar
 
@@ -48,6 +52,8 @@
     return nil;
 }
 
+#pragma mark - 胶囊
+
 - (void)buildIfNeeded {
     if (self.container != nil) {
         return;
@@ -57,6 +63,7 @@
     UIView* container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 36.0)];
     container.backgroundColor = [UIColor colorWithWhite:0.08 alpha:0.94];
     container.layer.cornerRadius = 12.0;
+    container.layer.cornerCurve = kCACornerCurveContinuous;
     container.layer.shadowColor = [UIColor blackColor].CGColor;
     container.layer.shadowOpacity = 0.35;
     container.layer.shadowRadius = 8.0;
@@ -64,7 +71,6 @@
     container.alpha = 0.0;
     self.container = container;
 
-    // ---- 进度组 ----
     UIView* progressGroup = [[UIView alloc] initWithFrame:container.bounds];
     progressGroup.autoresizingMask = UIViewAutoresizingFlexibleWidth |
                                      UIViewAutoresizingFlexibleHeight;
@@ -90,8 +96,11 @@
     [progressGroup addSubview:bar];
 
     [container addSubview:progressGroup];
+    self.progressGroup = progressGroup;
+    self.sizeLabel = size;
+    self.percentLabel = percent;
+    self.progressView = bar;
 
-    // ---- 完成组 ----
     UIView* successGroup = [[UIView alloc] initWithFrame:container.bounds];
     successGroup.autoresizingMask = UIViewAutoresizingFlexibleWidth |
                                     UIViewAutoresizingFlexibleHeight;
@@ -102,11 +111,11 @@
                                 withConfiguration:[UIImageSymbolConfiguration
                                                       configurationWithPointSize:20.0]]];
     tick.tintColor = [UIColor systemGreenColor];
-    tick.frame = CGRectMake(16.0, 12.0, 20.0, 20.0);
+    tick.frame = CGRectMake(14.0, 12.0, 20.0, 20.0);
     tick.contentMode = UIViewContentModeScaleAspectFit;
     [successGroup addSubview:tick];
 
-    UILabel* done = [[UILabel alloc] initWithFrame:CGRectMake(0.0, 0.0, 200.0, 44.0)];
+    UILabel* done = [[UILabel alloc] initWithFrame:CGRectMake(0.0, 0.0, width, 44.0)];
     done.text = @"下载完成";
     done.textAlignment = NSTextAlignmentCenter;
     done.font = [UIFont systemFontOfSize:14.5 weight:UIFontWeightSemibold];
@@ -114,12 +123,7 @@
     [successGroup addSubview:done];
 
     [container addSubview:successGroup];
-
-    self.progressGroup = progressGroup;
     self.successGroup = successGroup;
-    self.sizeLabel = size;
-    self.percentLabel = percent;
-    self.progressView = bar;
 }
 
 - (BOOL)presentContainer {
@@ -179,7 +183,7 @@
     self.sweepTimer = nil;
 }
 
-#pragma mark - Public
+#pragma mark - 对外接口
 
 - (void)showWithTitle:(NSString*)title {
     [self buildIfNeeded];
@@ -209,7 +213,7 @@
 
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self.successGroup.hidden == NO) {
-            return;  // 已完成，别再被进度覆盖
+            return;
         }
         if (detail.length > 0) {
             NSString* prefix = self.subtitlePrefix.length ? self.subtitlePrefix : @"正在下载";
@@ -230,11 +234,11 @@
     [self buildIfNeeded];
     [self stopSweep];
 
-    // 换成大一号的“完成”样式
     self.container.bounds = CGRectMake(0, 0, 236.0, 46.0);
     self.container.layer.cornerRadius = 14.0;
     self.progressGroup.hidden = YES;
     self.successGroup.hidden = NO;
+
     CGFloat capsuleWidth = CGRectGetWidth(self.container.bounds);
     for (UIView* sub in self.successGroup.subviews) {
         if ([sub isKindOfClass:[UILabel class]]) {
@@ -242,7 +246,7 @@
             ((UILabel*)sub).textAlignment = NSTextAlignmentCenter;
             sub.frame = CGRectMake(0.0, 0.0, capsuleWidth, 46.0);
         } else {
-            sub.frame = CGRectMake(14.0, 12.0, 20.0, 20.0);
+            sub.frame = CGRectMake(14.0, 13.0, 20.0, 20.0);
         }
     }
 
@@ -295,12 +299,13 @@
 
         CGFloat width = 240.0;
         CGFloat rowHeight = 28.0;
-        NSInteger visible = MIN(rows.count, 4);
+        NSInteger visible = MIN((NSInteger)rows.count, 4);
         CGFloat height = visible * rowHeight + 10.0;
 
         for (NSInteger index = 0; index < visible; index++) {
             NSDictionary* info = rows[index];
-            UIView* row = [[UIView alloc] initWithFrame:CGRectMake(0, 5.0 + index * rowHeight, width, rowHeight)];
+            UIView* row = [[UIView alloc] initWithFrame:CGRectMake(0, 5.0 + index * rowHeight, width,
+                                                                   rowHeight)];
             row.backgroundColor = [UIColor clearColor];
 
             UILabel* title = [[UILabel alloc] initWithFrame:CGRectMake(14, 0, 120, rowHeight)];
@@ -353,12 +358,11 @@
     }
     CGFloat width = 240.0;
     CGFloat top = CGRectGetMaxY(self.container.frame) + 6.0;
-    if (top < 60.0) {
-        top = window.safeAreaInsets.top + 50.0;
+    if (self.container.superview == nil) {
+        top = window.safeAreaInsets.top + 56.0;
     }
     self.queueView.frame = CGRectMake(CGRectGetMidX(window.bounds) - width / 2.0, top, width, height);
     [window bringSubviewToFront:self.queueView];
-    [window bringSubviewToFront:self.container];
 }
 
 - (void)hideQueueView {
@@ -368,7 +372,5 @@
     self.queueView.hidden = YES;
     [self.queueView removeFromSuperview];
 }
-
-@end
 
 @end
