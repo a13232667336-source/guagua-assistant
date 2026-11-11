@@ -272,7 +272,10 @@
                 status = @"下载失败";
             }
             NSString* sizeText = @"";
-            if (task.bytes > 0) {
+            if (task.state == NFBDownloadStateDone && task.lastSizeText.length > 0) {
+                // 完成后保持下载过程中显示的大小文案，直到卡片消失
+                sizeText = task.lastSizeText;
+            } else if (task.bytes > 0) {
                 NSString* got = [NSByteCountFormatter stringFromByteCount:task.bytes
                                                                countStyle:NSByteCountFormatterCountStyleFile];
                 if (task.totalBytes > task.bytes) {
@@ -285,6 +288,9 @@
             } else if (task.totalBytes > 0) {
                 sizeText = [NSByteCountFormatter stringFromByteCount:task.totalBytes
                                                           countStyle:NSByteCountFormatterCountStyleFile];
+            }
+            if (sizeText.length > 0) {
+                task.lastSizeText = sizeText;
             }
             [rows addObject:@{
                 @"title" : task.title ?: @"视频",
