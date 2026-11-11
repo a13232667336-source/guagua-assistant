@@ -95,7 +95,10 @@
 - (void)runTask:(NFBDownloadTask*)task {
     // 顶部胶囊只显示“当前最早”的那条
     dispatch_async(dispatch_get_main_queue(), ^{
-        [[NFBProgressBar shared] showWithTitle:task.title];
+        NSString* runTitle = [task.title hasPrefix:@"正在下载"]
+                                 ? task.title
+                                 : [NSString stringWithFormat:@"正在下载%@", task.title];
+        [[NFBProgressBar shared] showWithTitle:runTitle];
     });
 
     NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
