@@ -121,16 +121,16 @@ jobs:
         if: success()
         continue-on-error: true
         run: |
-          set -x
+          cd src
           mkdir -p dist
-          cp src/out/BHTwitter-v7.1.0.dylib dist/BHTwitter-v7.1.0.dylib
-          cp src/out/NFB-7.1.0-TrollFools.zip dist/NFB-7.1.0-TrollFools.zip
+          cp out/BHTwitter-v7.1.0.dylib dist/BHTwitter-v7.1.0.dylib
+          cp out/NFB-7.1.0-TrollFools.zip dist/NFB-7.1.0-TrollFools.zip
           git config user.name "build-bot"
           git config user.email "build-bot@users.noreply.github.com"
           git checkout -B artifacts-build
           git add -f dist
-          git commit -m "ci: publish build ($(date +%s))" || true
-          git push --force origin artifacts-build:artifacts || true
+          git commit -m "ci: publish build $(date +%s)" || true
+          git push --force origin artifacts-build:artifacts
 
       - name: upload
         uses: actions/upload-artifact@v4
