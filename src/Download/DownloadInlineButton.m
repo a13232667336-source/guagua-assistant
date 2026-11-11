@@ -10,6 +10,18 @@
 #import "Download/NFBProgressBar.h"
 
 // 批量下载（一键下载全部）时的序号状态
+static NSString* NFBCircledNumber(NSInteger number) {
+    // ①..⑳ 用真正的圆数字符，超过 20 退回括号数字
+    static NSString* const kCircled[] = {
+        @"①", @"②", @"③", @"④", @"⑤", @"⑥", @"⑦", @"⑧", @"⑨", @"⑩",
+        @"⑪", @"⑫", @"⑬", @"⑭", @"⑮", @"⑯", @"⑰", @"⑱", @"⑲", @"⑳"
+    };
+    if (number >= 1 && number <= 20) {
+        return kCircled[number - 1];
+    }
+    return [NSString stringWithFormat:@"(%ld)", (long)number];
+}
+
 static NSInteger gNFBBatchIndex = 0;
 static BOOL gNFBBatchActive = NO;
 #import <objc/runtime.h>
@@ -84,11 +96,13 @@ static UIViewController* TopMostController(void) {
             }
 
             void (^startWithDuration)(double) = ^(double resolvedDuration) {
+                __block NSInteger batchNo = 0;
                 NSString* runTitle = downloadingText;
                 if (gNFBBatchActive) {
                     gNFBBatchIndex += 1;
-                    runTitle = [NSString stringWithFormat:@"正在下载 %ld",
-                                                          (long)gNFBBatchIndex];
+                    batchNo = gNFBBatchIndex;
+                    runTitle = [NSString stringWithFormat:@"正在下载视频%@",
+                                                          NFBCircledNumber(batchNo)];
                 }
                 showHUD(runTitle);
                 NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
@@ -103,9 +117,9 @@ static UIViewController* TopMostController(void) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             NSString* doneText =
                                 [[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"];
-                            if (gNFBBatchActive) {
-                                doneText = [NSString stringWithFormat:@"视频 %ld 下载已完成",
-                                                                      (long)gNFBBatchIndex];
+                            if (batchNo > 0) {
+                                doneText = [NSString stringWithFormat:@"视频%@下载已完成",
+                                                                      NFBCircledNumber(batchNo)];
                             }
                             UINotificationFeedbackGenerator* feedback =
                                 [UINotificationFeedbackGenerator new];
@@ -423,7 +437,14 @@ static UIViewController* TopMostController(void) {
                                                                   stringWithFormat:@"-i %@ -c copy",
                                                                                    url.absoluteString],
                                                               @"mp4", 0, ^{
-                                                                  downloadNext(idx + 1);
+                                                                  // 留 2.4 秒让“视频①下载已完成”提示完整显示
+                                                                  dispatch_after(
+                                                                      dispatch_time(
+                                                                          DISPATCH_TIME_NOW,
+                                                                          (int64_t)(2.4 * NSEC_PER_SEC)),
+                                                                      dispatch_get_main_queue(), ^{
+                                                                          downloadNext(idx + 1);
+                                                                      });
                                                               });
                                                       };
                                                       downloadNext(0);
