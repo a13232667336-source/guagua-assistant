@@ -203,7 +203,7 @@
     NSMutableArray* rows = [NSMutableArray array];
     @synchronized(self) {
         for (NFBDownloadTask* task in self.taskList) {
-            NSString* status = @"排队中";
+            NSString* status = @"正在排队";
             if (task.state == NFBDownloadStateRunning) {
                 status = task.progress > 0.001
                              ? [NSString stringWithFormat:@"下载中 %.0f%%", task.progress * 100]

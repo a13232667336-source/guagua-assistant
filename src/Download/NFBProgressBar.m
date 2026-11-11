@@ -160,20 +160,20 @@
             UIView* fill = [row viewWithTag:1004];
 
             title.text = info[@"title"];
-            title.frame = CGRectMake(16, top + 6, 130, 18);
+            title.frame = CGRectMake(16, 6, 150, 18);
             status.text = info[@"status"];
-            status.frame = CGRectMake(width - 110, top + 7, 94, 16);
+            status.frame = CGRectMake(width - 110, 7, 94, 16);
 
             CGFloat progress = [info[@"progress"] doubleValue];
             NSString* statusText = info[@"status"] ?: @"";
             BOOL done = [statusText containsString:@"已完成"];
             CGFloat ratio = done ? 1.0 : MAX(0.0, MIN(1.0, progress));
 
-            track.frame = CGRectMake(16, top + 30, width - 32, 2.0);
+            track.frame = CGRectMake(16, 32, width - 32, 2.0);
             fill.frame = CGRectMake(0, 0, (width - 32) * ratio, 2.0);
         }
 
-        CGFloat height = padding * 2.0 + rows.count * rowHeight - 8.0;
+        CGFloat height = padding * 2.0 + rows.count * rowHeight;
         [self presentCardWithHeight:height];
     });
 }
