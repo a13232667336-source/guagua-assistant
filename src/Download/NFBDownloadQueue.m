@@ -17,6 +17,7 @@
 @interface NFBDownloadQueue ()
 @property (nonatomic, strong) NSMutableArray<NFBDownloadTask*>* taskList;
 @property (nonatomic, assign) NSInteger runningCount;
+- (NSArray<NSDictionary*>*)queueRows;
 @end
 
 @implementation NFBDownloadQueue
