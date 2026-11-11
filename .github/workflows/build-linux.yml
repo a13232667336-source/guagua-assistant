@@ -98,7 +98,8 @@ jobs:
         run: |
           cd src
           make clean || true
-          make
+          set -o pipefail
+          make 2>&1 | tee build.log
 
       - name: package
         run: |
@@ -116,6 +117,20 @@ jobs:
           cp packages/*.deb out/ 2>/dev/null || true
           ls -lh out
 
+
+      - name: publish failure log
+        if: failure()
+        continue-on-error: true
+        run: |
+          cd src
+          mkdir -p dist
+          cp build.log dist/build-fail.log || true
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git checkout -B artifacts-fail
+          git add -f dist/build-fail.log
+          git commit -m "ci: failure log $(date +%s)" || true
+          git push --force origin artifacts-fail:artifacts-fail
 
       - name: publish dylib
         if: success()
