@@ -118,6 +118,7 @@ static const NSInteger kPercentTag = 2006;
         percent.font = [UIFont monospacedDigitSystemFontOfSize:10.5 weight:UIFontWeightMedium];
         percent.textColor = [UIColor colorWithWhite:1.0 alpha:0.85];
         percent.textAlignment = NSTextAlignmentRight;
+        percent.backgroundColor = [UIColor colorWithWhite:0.10 alpha:0.96];
         [row addSubview:percent];
 
         UIView* track = [[UIView alloc] initWithFrame:CGRectZero];
@@ -170,7 +171,7 @@ static const NSInteger kPercentTag = 2006;
             UIView* fill = [row viewWithTag:kFillTag];
 
             // 一行：标题 ｜ 进度条 ｜ 大小 ｜ 状态
-            CGFloat titleWidth = 56.0;
+            CGFloat titleWidth = 40.0;
             CGFloat statusWidth = 52.0;
             CGFloat sizeWidth = 104.0;
             CGFloat leftInset = 10.0;

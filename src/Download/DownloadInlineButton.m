@@ -199,7 +199,7 @@ static UIViewController* TopMostController(void) {
                 ffmpegDownload(
                     [NSString stringWithFormat:@"-i %@ -c copy",
                                                bestMP4URL(media).absoluteString],
-                    @"mp4", 0, @"最高画质", nil);
+                    @"mp4", 0, @"视频", nil);
                 return;
             }
 
