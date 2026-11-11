@@ -126,6 +126,14 @@ static BOOL IsInEditHistory(UIViewController* viewController) {
 
 // 只有时间线类控制器才做 section 过滤：Grok 私聊等页面同样继承
 // TFNItemsDataViewController，之前无差别改 sections 会导致列表反复重载、闪屏。
+static BOOL NFBIsChatLikeController(id vc) {
+    NSString* name = NSStringFromClass([vc class]).lowercaseString;
+    // Grok 私聊 / DM 里不做 section 过滤（会引发列表重载闪屏），其余页面一律过滤，
+    // 这样搜索、探索、个人资料、推文详情里的广告也能被清掉。
+    return [name containsString:@"conversation"] || [name containsString:@"chat"] ||
+           [name containsString:@"message"] || [name containsString:@"grok"];
+}
+
 static BOOL NFBIsTimelineController(id vc) {
     NSString* name = NSStringFromClass([vc class]);
     return [name containsString:@"Timeline"] || [name containsString:@"T1URT"] ||
@@ -561,7 +569,7 @@ static NSArray* FilteredTimelineSections(TFNItemsDataViewController* dataViewCon
 %hook TFNItemsDataViewController
 
 - (void)setSections:(NSArray*)sections restoreScrollPosition:(BOOL)restoreScrollPosition {
-    if (!NFBIsTimelineController(self)) {
+    if (NFBIsChatLikeController(self)) {
         %orig(sections, restoreScrollPosition);
         return;
     }
@@ -572,7 +580,7 @@ static NSArray* FilteredTimelineSections(TFNItemsDataViewController* dataViewCon
     reconfigureItemIdentifiers:(NSArray*)identifiers
               withRowAnimation:(long long)animation
                     completion:(id)completion {
-    if (!NFBIsTimelineController(self)) {
+    if (NFBIsChatLikeController(self)) {
         %orig(sections, identifiers, animation, completion);
         return;
     }

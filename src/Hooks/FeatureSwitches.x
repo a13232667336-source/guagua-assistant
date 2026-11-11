@@ -298,6 +298,16 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return [BHTSettings boolForKey:@"hide_downvote_button"] ? @NO : nil;
     }
 
+    // 通用广告开关：X 12.4x 新增/改名的广告开关也能一并关掉
+    {
+        NSString* lowerKey = key.lowercaseString;
+        if ([lowerKey containsString:@"ssp_ads"] || [lowerKey containsString:@"promoted"] ||
+            [lowerKey hasPrefix:@"ads_"] || [lowerKey containsString:@"_ads_"] ||
+            [lowerKey containsString:@"ad_break"] || [lowerKey containsString:@"advertis"]) {
+            return [BHTSettings boolForKey:@"hide_promoted"] ? @NO : nil;
+        }
+    }
+
     if ([key isEqualToString:@"ssp_ads_spotlight"] ||
         [key isEqualToString:@"ssp_ads_spotlight_client_only_integration"] ||
         [key isEqualToString:
