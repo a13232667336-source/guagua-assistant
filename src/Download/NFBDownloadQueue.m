@@ -89,6 +89,26 @@
         [self runTask:task];
     }
     [self notifyChange];
+
+    BOOL hasPending = NO;
+    @synchronized(self) {
+        for (NFBDownloadTask* task in self.taskList) {
+            if (task.state == NFBDownloadStateQueued || task.state == NFBDownloadStateRunning) {
+                hasPending = YES;
+                break;
+            }
+        }
+        if (!hasPending && self.taskList.count > 0) {
+            // 全部结束：让“已完成”停留 3 秒，然后清空列表并收起卡片
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
+                           dispatch_get_main_queue(), ^{
+                               @synchronized(self) {
+                                   [self.taskList removeAllObjects];
+                               }
+                               [self notifyChange];
+                           });
+        }
+    }
 }
 
 - (void)runTask:(NFBDownloadTask*)task {
@@ -170,17 +190,12 @@
                     }
                     [self notifyChange];
 
-                    // 让“已完成/下载失败”在卡片上停留 1.5 秒，然后才移除并开始下一条
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                                 (int64_t)(1.5 * NSEC_PER_SEC)),
-                                   dispatch_get_main_queue(), ^{
-                                       @synchronized(self) {
-                                           self.runningCount = MAX(0, self.runningCount - 1);
-                                           [self.taskList removeObject:task];
-                                       }
-                                       [self notifyChange];
-                                       [self pump];
-                                   });
+                    // 完成的任务留在列表里（显示“已完成”），只释放并发位，立刻开始下一条
+                    @synchronized(self) {
+                        self.runningCount = MAX(0, self.runningCount - 1);
+                    }
+                    [self pump];
+                    [self notifyChange];
                 });
             });
         }
