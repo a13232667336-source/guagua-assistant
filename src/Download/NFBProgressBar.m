@@ -196,6 +196,10 @@ static const NSInteger kPercentTag = 2006;
                 trackWidth = 60.0;
             }
             track.frame = CGRectMake(trackX, (rowHeight - 4.0) / 2.0, trackWidth, 4.0);
+            [row bringSubviewToFront:percentLabel];
+            [row bringSubviewToFront:size];
+            [row bringSubviewToFront:status];
+            [row bringSubviewToFront:title];
 
             CGFloat progress = [info[@"progress"] doubleValue];
             NSString* statusText = info[@"status"] ?: @"";
