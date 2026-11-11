@@ -1,0 +1,79 @@
+[1;31m> [1;3;39mMaking all for tweak BHTwitter…[m
+[0;32m==> [1;39mCompiling src/Core/BHTBundle.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/Core/NFBEmbedded.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/Core/BHTManager.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/Core/BHTSettings.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/Download/DownloadInlineButton.m (arm64)…[m
+[1msrc/Download/DownloadInlineButton.m:85:19: [0m[0;1;35mwarning: [0m[1munused variable 'downloadingText' [-Wunused-variable][0m
+        NSString* downloadingText = [[BHTBundle sharedBundle]
+[0;1;32m                  ^
+[0m[1msrc/Download/DownloadInlineButton.m:26:18: [0m[0;1;35mwarning: [0m[1munused variable 'gNFBBatchIndex' [-Wunused-variable][0m
+static NSInteger gNFBBatchIndex = 0;
+[0;1;32m                 ^
+[0m[1msrc/Download/DownloadInlineButton.m:27:13: [0m[0;1;35mwarning: [0m[1munused variable 'gNFBBatchActive' [-Wunused-variable][0m
+static BOOL gNFBBatchActive = NO;
+[0;1;32m            ^
+[0m3 warnings generated.
+[0;32m==> [1;39mCompiling src/Download/NFBDownloadQueue.m (arm64)…[m
+[0;31m==> [1;39mPreprocessing src/Hooks/Ads.x…[m
+[0;31m==> [1;39mPreprocessing src/Hooks/FeatureSwitches.x…[m
+[0;31m==> [1;39mPreprocessing src/Hooks/MediaDownloads.x…[m
+[0;32m==> [1;39mCompiling src/Download/NFBProgressBar.m (arm64)…[m
+[0;31m==> [1;39mPreprocessing src/Hooks/Profile.x…[m
+[0;31m==> [1;39mPreprocessing src/Hooks/Settings.x…[m
+[0;31m==> [1;39mPreprocessing src/Hooks/Timeline.x…[m
+[0;31m==> [1;39mPreprocessing src/Hooks/VideoTimestamp.x…[m
+[0;32m==> [1;39mCompiling src/Hooks/HookHelpers.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/Settings/NFBAppearance.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/ThemeColor/Palette.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/Settings/ModernSettingsPageViewController.m (arm64)…[m
+[0;32m==> [1;39mCompiling src/Settings/ModernSettingsCells.m (arm64)…[m
+[1msrc/Settings/ModernSettingsCells.m:42:8: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+    id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m       ^
+[0m[1msrc/Settings/ModernSettingsCells.m:142:12: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+        id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m           ^
+[0m[1msrc/Settings/ModernSettingsCells.m:171:8: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+    id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m       ^
+[0m[1msrc/Settings/ModernSettingsCells.m:228:12: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+        id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m           ^
+[0m[1msrc/Settings/ModernSettingsCells.m:256:8: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+    id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m       ^
+[0m[1msrc/Settings/ModernSettingsCells.m:342:12: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+        id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m           ^
+[0m[1msrc/Settings/ModernSettingsCells.m:407:8: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+    id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m       ^
+[0m7 warnings generated.
+[0;32m==> [1;39mCompiling src/Settings/ModernSettingsViewController.m (arm64)…[m
+[1msrc/Settings/ModernSettingsViewController.m:53:8: [0m[0;1;35mwarning: [0m[1munused variable 'fontGroup' [-Wunused-variable][0m
+    id fontGroup = [BHTManager sharedFontGroup];
+[0;1;32m       ^
+[0m[1msrc/Settings/ModernSettingsViewController.m:59:8: [0m[0;1;35mwarning: [0m[1munused variable 'colorPalette' [-Wunused-variable][0m
+    id colorPalette = [currentPalette colorPalette];
+[0;1;32m       ^
+[0m2 warnings generated.
+[0;32m==> [1;39mCompiling src/Hooks/Profile.x (arm64)…[m
+[0;32m==> [1;39mCompiling src/Hooks/Ads.x (arm64)…[m
+[0;32m==> [1;39mCompiling src/Hooks/MediaDownloads.x (arm64)…[m
+[0;32m==> [1;39mCompiling src/Hooks/FeatureSwitches.x (arm64)…[m
+[1msrc/Hooks/FeatureSwitches.x:700:22: [0m[0;1;35mwarning: [0m[1munused variable 'DashPanelIDQuery' [-Wunused-variable][0m
+static __thread BOOL DashPanelIDQuery = NO;
+[0;1;32m                     ^
+[0m1 warning generated.
+[0;32m==> [1;39mCompiling src/Hooks/Settings.x (arm64)…[m
+[0;32m==> [1;39mCompiling src/Hooks/VideoTimestamp.x (arm64)…[m
+[0;32m==> [1;39mCompiling src/Hooks/Timeline.x (arm64)…[m
+[0;33m==> [1;39mLinking tweak BHTwitter (arm64)…[m
+ld64.lld: warning: Option `-multiply_defined' is obsolete. Please modernize your usage.
+[0;34m==> [1;39mStripping BHTwitter (arm64)…[m
+/home/runner/work/guagua-assistant/guagua-assistant/theos/toolchain/linux/iphone/bin/strip: /home/runner/work/guagua-assistant/guagua-assistant/src/.theos/obj/arm64/BHTwitter.dylib: file format not recognized
+make[3]: *** [/home/runner/work/guagua-assistant/guagua-assistant/theos/makefiles/instance/library.mk:53: /home/runner/work/guagua-assistant/guagua-assistant/src/.theos/obj/arm64/BHTwitter.dylib] Error 1
+make[2]: *** [/home/runner/work/guagua-assistant/guagua-assistant/theos/makefiles/instance/library.mk:52: /home/runner/work/guagua-assistant/guagua-assistant/src/.theos/obj/arm64/BHTwitter.dylib] Error 2
+make[1]: *** [/home/runner/work/guagua-assistant/guagua-assistant/theos/makefiles/instance/library.mk:37: internal-library-all_] Error 2
+make: *** [/home/runner/work/guagua-assistant/guagua-assistant/theos/makefiles/master/rules.mk:146: BHTwitter.all.tweak.variables] Error 2
