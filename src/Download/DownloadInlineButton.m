@@ -8,6 +8,7 @@
 
 #import "Download/DownloadInlineButton.h"
 #import "Download/NFBProgressBar.h"
+#import "Download/NFBDownloadQueue.h"
 
 // 批量下载（一键下载全部）时的序号状态
 static NSString* NFBCircledNumber(NSInteger number) {
@@ -83,123 +84,17 @@ static UIViewController* TopMostController(void) {
         // from the processed time measured against the probed duration.
         NSString* downloadingText = [[BHTBundle sharedBundle]
             localizedStringForKey:@"DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING"];
-        void (^ffmpegDownload)(NSString*, NSString*, double, void (^)(void)) = ^(
-            NSString* args, NSString* ext, double durationMs, void (^completion)(void)) {
-            // 从参数里取出源地址，用于没给时长时先探测时长（否则百分比不会动）
-            NSString* sourceURLString = nil;
-            NSArray<NSString*>* tokens = [args componentsSeparatedByString:@" "];
-            for (NSUInteger i = 0; i + 1 < tokens.count; i++) {
-                if ([tokens[i] isEqualToString:@"-i"]) {
-                    sourceURLString = tokens[i + 1];
-                    break;
-                }
+        void (^ffmpegDownload)(NSString*, NSString*, double, NSString*, void (^)(void)) = ^(
+            NSString* args, NSString* ext, double durationMs, NSString* title,
+            void (^completion)(void)) {
+            // 统一交给下载队列：串行执行，多个推文会排队并在右侧显示列表
+            [[NFBDownloadQueue shared] enqueueTitle:(title.length ? title : @"视频")
+                                               args:args
+                                                ext:ext
+                                           duration:durationMs];
+            if (completion) {
+                completion();
             }
-
-            void (^startWithDuration)(double) = ^(double resolvedDuration) {
-                __block NSInteger batchNo = 0;
-                NSString* runTitle = downloadingText;
-                if (gNFBBatchActive) {
-                    gNFBBatchIndex += 1;
-                    batchNo = gNFBBatchIndex;
-                    runTitle = [NSString stringWithFormat:@"正在下载视频%@",
-                                                          NFBCircledNumber(batchNo)];
-                }
-                showHUD(runTitle);
-                NSURL* outFile = [[NSURL fileURLWithPath:NSTemporaryDirectory()]
-                    URLByAppendingPathComponent:[NSString
-                                                    stringWithFormat:@"%@.%@",
-                                                                     NSUUID.UUID.UUIDString,
-                                                                     ext]];
-                [FFmpegKit
-                    executeAsync:[NSString stringWithFormat:@"%@ %@", args, outFile.path]
-                    withCompleteCallback:^(FFmpegSession* session) {
-                        ReturnCode* returnCode = [session getReturnCode];
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            NSString* doneText =
-                                [[BHTBundle sharedBundle] localizedStringForKey:@"DOWNLOAD_COMPLETE_TITLE"];
-                            if (batchNo > 0) {
-                                doneText = [NSString stringWithFormat:@"视频%@下载已完成",
-                                                                      NFBCircledNumber(batchNo)];
-                            }
-                            UINotificationFeedbackGenerator* feedback =
-                                [UINotificationFeedbackGenerator new];
-                            [feedback prepare];
-
-                            if ([ReturnCode isSuccess:returnCode]) {
-                                [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
-                                if ([BHTSettings boolForKey:@"direct_save"]) {
-                                    if ([ext isEqualToString:@"gif"])
-                                        [BHTManager saveGIF:outFile];
-                                    else
-                                        [BHTManager save:outFile];
-                                    [[NFBProgressBar shared] showSuccessWithText:doneText];
-                                } else {
-                                    [[NFBProgressBar shared] showSuccessWithText:doneText];
-                                    [BHTManager showSaveVC:outFile];
-                                }
-                            } else {
-                                [feedback notificationOccurred:UINotificationFeedbackTypeError];
-                                [[NFBProgressBar shared] hide];
-                                UIAlertController* alert = [UIAlertController
-                                    alertControllerWithTitle:
-                                        [[BHTBundle sharedBundle]
-                                            localizedTwitterStringForKey:@"ERROR_ALERT_TITLE"]
-                                                     message:[[BHTBundle sharedBundle]
-                                                                 localizedStringForKey:
-                                                                     @"UNKNOWN_ERROR"]
-                                              preferredStyle:UIAlertControllerStyleAlert];
-                                [alert addAction:
-                                           [UIAlertAction
-                                               actionWithTitle:[[BHTBundle sharedBundle]
-                                                                   localizedTwitterStringForKey:
-                                                                       @"OK_ACTION_LABEL"]
-                                                         style:UIAlertActionStyleDefault
-                                                       handler:nil]];
-                                [TopMostController() presentViewController:alert
-                                                                  animated:YES
-                                                                completion:nil];
-                            }
-                            if (completion)
-                                completion();
-                        });
-                    }
-                    withLogCallback:nil
-                    withStatisticsCallback:^(Statistics* statistics) {
-                        double processed = [statistics getTime];
-                        long long bytes = [statistics getSize];
-                        CGFloat progress = resolvedDuration > 0
-                                               ? (CGFloat)(processed / resolvedDuration)
-                                               : 0.0;
-                        NSString* sizeText =
-                            bytes > 0 ? [NSByteCountFormatter
-                                            stringFromByteCount:bytes
-                                                     countStyle:NSByteCountFormatterCountStyleFile]
-                                      : nil;
-                        [[NFBProgressBar shared] setProgress:progress detail:sizeText];
-                    }];
-            };
-
-            if (durationMs > 0) {
-                startWithDuration(durationMs);
-                return;
-            }
-
-            // 没有时长：先探测一次（FFprobe 很快），拿不到就靠扫动动画
-            showHUD(downloadingText);
-            NSURL* probeURL = sourceURLString.length ? [NSURL URLWithString:sourceURLString] : nil;
-            dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-                double resolved = 0;
-                if (probeURL != nil) {
-                    @try {
-                        MediaInformation* info = [BHTManager getM3U8Information:probeURL];
-                        resolved = [info getDuration].doubleValue * 1000.0;
-                    } @catch (__unused NSException* exception) {
-                    }
-                }
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    startWithDuration(resolved);
-                });
-            });
         };
 
         // Variant builders
@@ -230,7 +125,7 @@ static UIViewController* TopMostController(void) {
                                                           @"split[a][b];[a]palettegen["
                                                           @"p];[b][p]paletteuse",
                                                           url.absoluteString],
-                                     @"gif", durationMs, nil);
+                                     @"gif", durationMs, @"GIF", nil);
                              }];
         };
 
@@ -246,7 +141,7 @@ static UIViewController* TopMostController(void) {
                                              @"-i %@ -vf scale=%@:flags=lanczos -c:v "
                                              @"h264_videotoolbox -b:v 2M -c:a copy",
                                              url.absoluteString, resolution],
-                                     @"mp4", durationMs, nil);
+                                     @"mp4", durationMs, resolution, nil);
                              }];
         };
 
@@ -418,36 +313,19 @@ static UIViewController* TopMostController(void) {
                                                  @"DOWNLOAD_ALL_VIDEOS_OPTION_TITLE"]
                                                imageName:@"arrow_down_circle_stroke"
                                                   action:^{
-                                                      gNFBBatchActive = YES;
-                                                      gNFBBatchIndex = 0;
-                                                      __block void (^downloadNext)(NSUInteger);
-                                                      downloadNext = ^(NSUInteger idx) {
-                                                          if (idx >= queue.count) {
-                                                              downloadNext = nil;
-                                                              gNFBBatchActive = NO;
-                                                              return;
-                                                          }
-                                                          NSURL* url = bestMP4URL(queue[idx]);
+                                                      for (NSUInteger i = 0; i < queue.count; i++) {
+                                                          NSURL* url = bestMP4URL(queue[i]);
                                                           if (!url) {
-                                                              downloadNext(idx + 1);
-                                                              return;
+                                                              continue;
                                                           }
+                                                          NSString* title =
+                                                              [NSString stringWithFormat:@"视频%@",
+                                                                                         NFBCircledNumber(i + 1)];
                                                           ffmpegDownload(
-                                                              [NSString
-                                                                  stringWithFormat:@"-i %@ -c copy",
-                                                                                   url.absoluteString],
-                                                              @"mp4", 0, ^{
-                                                                  // 留 2.4 秒让“视频①下载已完成”提示完整显示
-                                                                  dispatch_after(
-                                                                      dispatch_time(
-                                                                          DISPATCH_TIME_NOW,
-                                                                          (int64_t)(2.4 * NSEC_PER_SEC)),
-                                                                      dispatch_get_main_queue(), ^{
-                                                                          downloadNext(idx + 1);
-                                                                      });
-                                                              });
-                                                      };
-                                                      downloadNext(0);
+                                                              [NSString stringWithFormat:@"-i %@ -c copy",
+                                                                                         url.absoluteString],
+                                                              @"mp4", 0, title, nil);
+                                                      }
                                                   }]
                          atIndex:0];
             }
