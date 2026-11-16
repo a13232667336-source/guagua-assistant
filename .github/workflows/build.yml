@@ -93,10 +93,10 @@ jobs:
           cp "$DYLIB" dist/NoShotSound.dylib
           git config user.name "build-bot"
           git config user.email "build-bot@users.noreply.github.com"
-          git checkout -B artifacts
+          git checkout -B artifacts-nss
           git add -f dist
           git commit -m "ci: build $(date +%s)" || true
-          git push --force origin artifacts:artifacts
+          git push --force origin artifacts-nss:artifacts-nss
 
       - name: publish failure log
         if: failure()
@@ -105,7 +105,7 @@ jobs:
           cp build.log dist/build-fail.log 2>/dev/null || true
           git config user.name "build-bot"
           git config user.email "build-bot@users.noreply.github.com"
-          git checkout -B artifacts-fail
+          git checkout -B artifacts-nss-fail
           git add -f dist/build-fail.log 2>/dev/null || true
           git commit -m "ci: fail log $(date +%s)" || true
           git push --force origin artifacts-fail:artifacts-fail || true
