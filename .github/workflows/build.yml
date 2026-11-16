@@ -33,6 +33,7 @@ jobs:
       - name: theos
         run: |
           git clone --depth 1 https://github.com/theos/theos.git "$THEOS"
+          bash "$THEOS/bin/update-theos" || true
           TC="$THEOS/toolchain/linux/iphone/bin"
           mkdir -p "$TC"
           ln -sf "$(command -v clang)" "$TC/clang"
