@@ -46,8 +46,12 @@ jobs:
 
       - name: sdk
         run: |
-          curl -L -o sdk.zip https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.zip
-          unzip -q sdk.zip -d "$THEOS/sdks"
+          mkdir -p "$THEOS/sdks"
+          git clone -n --depth=1 --filter=tree:0 https://github.com/theos/sdks /tmp/sdks
+          cd /tmp/sdks
+          git sparse-checkout set --no-cone iPhoneOS16.5.sdk
+          git checkout
+          mv /tmp/sdks/iPhoneOS16.5.sdk "$THEOS/sdks/"
 
       - name: ldid-stub
         run: |
