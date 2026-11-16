@@ -1,0 +1,9 @@
+Package: com.guagua.noshotsound
+Name: NoShotSound
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: 永久屏蔽截屏 / 相机快门提示音（iOS 15-17）
+Maintainer: Samuel
+Author: Samuel
+Section: Tweaks
+Depends: mobilesubstrate

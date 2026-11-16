@@ -1,0 +1,88 @@
+name: build-noshotsound
+permissions:
+  contents: write
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      THEOS: ${{ github.workspace }}/theos
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: deps
+        timeout-minutes: 8
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          clang --version | head -n1 || true
+          command -v llvm-ranlib || command -v llvm-ranlib-14 || true
+          if ! command -v ld64.lld >/dev/null 2>&1 && ! command -v ld64.lld-14 >/dev/null 2>&1; then
+            sudo apt-get install -y --no-install-recommends lld-14 || \
+            sudo apt-get install -y --no-install-recommends lld || true
+          fi
+          if ! command -v ld64.lld >/dev/null 2>&1; then
+            FOUND=$(command -v ld64.lld-14 || command -v ld64.lld-15 || true)
+            [ -n "$FOUND" ] && sudo ln -sf "$FOUND" /usr/local/bin/ld64.lld
+          fi
+
+      - name: theos
+        run: |
+          git clone --depth 1 https://github.com/theos/theos.git "$THEOS"
+          TC="$THEOS/toolchain/linux/iphone/bin"
+          mkdir -p "$TC"
+          ln -sf "$(command -v clang)" "$TC/clang"
+          ln -sf "$(command -v clang++)" "$TC/clang++"
+          AR_BIN=$(command -v llvm-ar || command -v llvm-ar-14)
+          ln -sf "$AR_BIN" "$TC/ar"
+          RANLIB_BIN=$(command -v llvm-ranlib || command -v llvm-ranlib-14)
+          ln -sf "$RANLIB_BIN" "$TC/ranlib"
+          STRIP_BIN=$(command -v llvm-strip || command -v llvm-strip-14 || true)
+          if [ -n "$STRIP_BIN" ]; then ln -sf "$STRIP_BIN" "$TC/strip"; else printf '#!/bin/sh\nexit 0\n' > "$TC/strip"; chmod +x "$TC/strip"; fi
+
+      - name: sdk
+        run: |
+          curl -L -o sdk.zip https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.zip
+          unzip -q sdk.zip -d "$THEOS/sdks"
+
+      - name: ldid-stub
+        run: |
+          printf '#!/bin/sh\nexit 0\n' | sudo tee /usr/local/bin/ldid >/dev/null
+          sudo chmod +x /usr/local/bin/ldid
+          mkdir -p "$THEOS/bin"; cp /usr/local/bin/ldid "$THEOS/bin/ldid"; chmod +x "$THEOS/bin/ldid"
+
+      - name: build
+        run: |
+          make clean || true
+          set -o pipefail
+          make package 2>&1 | tee build.log
+
+      - name: publish
+        if: success()
+        run: |
+          mkdir -p dist
+          cp packages/*.deb dist/ 2>/dev/null || true
+          DYLIB=$(find .theos/obj -name 'NoShotSound.dylib' | head -n1)
+          cp "$DYLIB" dist/NoShotSound.dylib
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git checkout -B artifacts
+          git add -f dist
+          git commit -m "ci: build $(date +%s)" || true
+          git push --force origin artifacts:artifacts
+
+      - name: publish failure log
+        if: failure()
+        run: |
+          mkdir -p dist
+          cp build.log dist/build-fail.log 2>/dev/null || true
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git checkout -B artifacts-fail
+          git add -f dist/build-fail.log 2>/dev/null || true
+          git commit -m "ci: fail log $(date +%s)" || true
+          git push --force origin artifacts-fail:artifacts-fail || true
