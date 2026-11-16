@@ -63,13 +63,29 @@ jobs:
         run: |
           make clean || true
           set -o pipefail
-          make package 2>&1 | tee build.log
+          make 2>&1 | tee build.log
+
+      - name: package (deb + zip)
+        if: success()
+        run: |
+          DYLIB=$(find .theos/obj -name 'NoShotSound.dylib' | head -n1)
+          echo "dylib=$DYLIB"
+          test -n "$DYLIB"
+          STAGE=$(mktemp -d)
+          mkdir -p "$STAGE/DEBIAN" "$STAGE/Library/MobileSubstrate/DynamicLibraries"
+          cp "$DYLIB" "$STAGE/Library/MobileSubstrate/DynamicLibraries/"
+          cp NoShotSound.plist "$STAGE/Library/MobileSubstrate/DynamicLibraries/"
+          cp control "$STAGE/DEBIAN/control"
+          mkdir -p dist
+          ( cd "$STAGE" && dpkg-deb -Zgzip -b . "$GITHUB_WORKSPACE/dist/NoShotSound.deb" ) || true
+          cp "$DYLIB" dist/NoShotSound.dylib
+          cp NoShotSound.plist dist/
+          ls -lh dist
 
       - name: publish
         if: success()
         run: |
           mkdir -p dist
-          cp packages/*.deb dist/ 2>/dev/null || true
           DYLIB=$(find .theos/obj -name 'NoShotSound.dylib' | head -n1)
           cp "$DYLIB" dist/NoShotSound.dylib
           git config user.name "build-bot"
