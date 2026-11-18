@@ -18,7 +18,7 @@
 "BLUE_LAUNCH_SCREEN_DETAIL" = "Restores the original blue launch screen.";
 "BLUE_LAUNCH_SCREEN_TITLE" = "Restore blue launch screen";
 "BOLD_FONTS_PICKER_OPTION_TITLE" = "Choose a bold font";
-"BYPASS_AGE_VERIFICATION_DETAIL" = "Skips the age verification flow for sensitive content.";
+"BYPASS_AGE_VERIFICATION_DETAIL" = "Skip the age assurance flow and open restricted content directly.";
 "BYPASS_AGE_VERIFICATION_TITLE" = "Bypass age verification";
 "CANCEL_ACTION_LABEL" = "Cancel";
 "COLOR_TWITTER_ICON_IN_TOP_BAR_DETAIL" = "Applies the accent color to the Twitter icon in the top bar.";
@@ -68,7 +68,8 @@
 "DISABLE_MEDIA_CAROUSEL_TITLE" = "Disable media carousel";
 "DISABLE_RTL_DETAIL" = "Force a a left-to-right layout, even for languages that are read from right-to-left.";
 "DISABLE_RTL_TITLE" = "Use left-to-right layout";
-"DISABLE_SENSITIVE_TWEET_WARNINGS_TITLE" = "No sensitive content warnings";
+"DISABLE_SENSITIVE_TWEET_WARNINGS_DETAIL" = "Show sensitive media directly without the warning interstitial.";
+"DISABLE_SENSITIVE_TWEET_WARNINGS_TITLE" = "Remove sensitive content warnings";
 "DISABLE_VIDEO_CAPTIONS_TITLE" = "No video captions";
 "DISABLE_VIDEO_DOCKING_DETAIL" = "Prevents the PiP button from showing up when dragging videos out.";
 "DISABLE_VIDEO_DOCKING_TITLE" = "No video docking";
@@ -223,8 +224,8 @@
 "REPLY_IN_WEBVIEW_TITLE" = "Reply in web view";
 "REPLY_SORTING_DETAIL" = "Disable the reply sorting feature in tweet conversations.";
 "REPLY_SORTING_TITLE" = "No reply sorting";
-"RESTORE_FOLLOW_BUTTON_DETAIL" = "Hides the Subscribe button on Tweets and in profiles.";
-"RESTORE_FOLLOW_BUTTON_TITLE" = "No Subscribe button";
+"RESTORE_FOLLOW_BUTTON_DETAIL" = "Hide every Subscribe button and keep the plain Follow button.";
+"RESTORE_FOLLOW_BUTTON_TITLE" = "Remove Subscribe button";
 "RESTORE_REFRESH_SOUNDS_TITLE" = "Pull-to-refresh sounds";
 "RESTORE_REPLY_CONTEXT_DETAIL" = "Shows the people that are being replied to under Tweets.";
 "RESTORE_REPLY_CONTEXT_TITLE" = "Restore reply context";

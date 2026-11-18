@@ -1,6 +1,6 @@
 //
 //  Ads.x
-//  呱呱助手
+//  NeoFreeBird
 //
 
 #import "HookHelpers.h"
@@ -135,31 +135,10 @@ static NSArray* FilteredSections(TFNItemsDataViewController* dataViewController,
     return modified ? filteredSections : sections;
 }
 
-
-// 只有时间线类控制器才做 section 过滤：Grok 私聊等页面同样继承
-// TFNItemsDataViewController，之前无差别改 sections 会导致列表反复重载、闪屏。
-static BOOL NFBIsChatLikeController(id vc) {
-    NSString* name = NSStringFromClass([vc class]).lowercaseString;
-    // Grok 私聊 / DM 里不做 section 过滤（会引发列表重载闪屏），其余页面一律过滤，
-    // 这样搜索、探索、个人资料、推文详情里的广告也能被清掉。
-    return [name containsString:@"conversation"] || [name containsString:@"chat"] ||
-           [name containsString:@"message"] || [name containsString:@"grok"];
-}
-
-static BOOL NFBIsTimelineController(id vc) {
-    NSString* name = NSStringFromClass([vc class]);
-    return [name containsString:@"Timeline"] || [name containsString:@"T1URT"] ||
-           [name containsString:@"T1Home"] || [name containsString:@"ConversationTimeline"];
-}
-
 %hook TFNItemsDataViewController
 
 - (void)setSections:(NSArray*)sections
     restoreScrollPosition:(BOOL)restoreScrollPosition {
-    if (NFBIsChatLikeController(self)) {
-        %orig(sections, restoreScrollPosition);
-        return;
-    }
     %orig(FilteredSections(self, sections), restoreScrollPosition);
 }
 
@@ -167,10 +146,6 @@ static BOOL NFBIsTimelineController(id vc) {
     reconfigureItemIdentifiers:(NSArray*)identifiers
               withRowAnimation:(long long)animation
                     completion:(id)completion {
-    if (NFBIsChatLikeController(self)) {
-        %orig(sections, identifiers, animation, completion);
-        return;
-    }
     %orig(FilteredSections(self, sections), identifiers, animation,
               completion);
 }

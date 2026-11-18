@@ -19,7 +19,10 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                 @"subtitleKey" : @"MODERN_SETTINGS_LAYOUT_SUBTITLE",
                 @"settings" : @[
                     @{@"key" : @"hide_promoted", @"default" : @YES, @"type" : @"toggle"},
-                    @{@"key" : @"hide_premium_offer", @"default" : @YES, @"type" : @"toggle"}
+                    @{@"key" : @"hide_premium_offer", @"default" : @YES, @"type" : @"toggle"},
+                    @{@"key" : @"restore_follow_button", @"default" : @YES, @"type" : @"toggle"},
+                    @{@"key" : @"disable_sensitive_tweet_warnings", @"default" : @YES, @"type" : @"toggle"},
+                    @{@"key" : @"bypass_age_verification", @"default" : @YES, @"type" : @"toggle"}
                 ]
             },
             @"timelines" : @{
